@@ -25,6 +25,8 @@ import {
   StatusChip,
 } from "@/components/ui/badges";
 import { PageHeader } from "@/components/shell/page-header";
+import { ClientEditor, ContactEditor } from "@/components/clients/client-editor";
+import { TaskPanel } from "@/components/tasks/task-panel";
 import {
   INTERACTION_TYPES,
   STAGES,
@@ -55,6 +57,7 @@ export function ClientDetail({
     () => (mounted ? db().getClient(clientId) : Promise.resolve(null)),
     [mounted, clientId],
   );
+  const [editing, setEditing] = useState(false);
 
   if (loading) {
     return (
@@ -110,6 +113,13 @@ export function ClientDetail({
             <div className="flex flex-wrap items-center gap-2">
               <StatusChip status={client.status} />
               <MemberBadge memberId={client.ownerId} size="md" showName />
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => setEditing((v) => !v)}
+              >
+                {editing ? m.common.cancel : m.actions.edit}
+              </Button>
             </div>
           }
         />
@@ -154,6 +164,18 @@ export function ClientDetail({
         </div>
       ) : null}
 
+      {editing ? (
+        <ClientEditor
+          client={client}
+          locale={locale}
+          onSaved={() => {
+            setEditing(false);
+            reload();
+          }}
+          onCancel={() => setEditing(false)}
+        />
+      ) : null}
+
       <StageStepper client={client} onChanged={reload} locale={locale} />
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -161,65 +183,11 @@ export function ClientDetail({
         <div className="space-y-4">
           <Card>
             <CardHeader title={m.client.contacts} />
-            {client.contacts.length === 0 ? (
-              <p className="text-xs text-faint">{m.common.empty}</p>
-            ) : (
-              <div className="space-y-3">
-                {client.contacts.map((c) => (
-                  <div
-                    key={c.id}
-                    className="rounded-md border border-border bg-surface-2 p-3"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <div className="truncate text-sm font-medium">
-                          {c.name}
-                        </div>
-                        <div className="truncate text-xs text-faint">
-                          {c.title}
-                        </div>
-                      </div>
-                      {c.isPrimary ? (
-                        <span className="shrink-0 rounded-full bg-accent-soft px-2 py-0.5 text-[10px] font-medium text-accent">
-                          {m.client.primary}
-                        </span>
-                      ) : null}
-                    </div>
-
-                    <div className="mt-2.5 flex flex-wrap gap-1.5">
-                      {c.phone ? (
-                        <a
-                          href={`tel:${c.phone.replace(/\s/g, "")}`}
-                          className="inline-flex items-center gap-1.5 rounded-sm border border-border px-2 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
-                          dir="ltr"
-                        >
-                          📞 {c.phone}
-                        </a>
-                      ) : null}
-                      {c.whatsapp || c.phone ? (
-                        <a
-                          href={`https://wa.me/${(c.whatsapp || c.phone).replace(/\D/g, "")}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1.5 rounded-sm border border-border px-2 py-1 text-xs text-muted transition-colors hover:border-success hover:text-success"
-                        >
-                          💬 WhatsApp
-                        </a>
-                      ) : null}
-                      {c.email ? (
-                        <a
-                          href={`mailto:${c.email}`}
-                          className="inline-flex items-center gap-1.5 rounded-sm border border-border px-2 py-1 text-xs text-muted transition-colors hover:border-info hover:text-info"
-                          dir="ltr"
-                        >
-                          ✉️ {c.email}
-                        </a>
-                      ) : null}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <ContactEditor
+              clientId={client.id}
+              contacts={client.contacts}
+              onChanged={reload}
+            />
           </Card>
 
           <Card>
@@ -313,6 +281,14 @@ export function ClientDetail({
               </div>
             </Card>
           ) : null}
+
+          <TaskPanel
+            tasks={client.tasks}
+            clients={[]}
+            locale={locale}
+            onChanged={reload}
+            fixedClientId={client.id}
+          />
 
           <LogInteraction
             clientId={client.id}

@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/badges";
 import { PageHeader } from "@/components/shell/page-header";
 import { HoursGrid } from "@/components/attendance/hours-grid";
+import { TaskPanel } from "@/components/tasks/task-panel";
+import { QuickLog } from "@/components/clients/quick-log";
 import { breakdownBars, scoreBand } from "@/lib/efficiency";
 import { rangeFor } from "@/lib/dates";
 import { formatDateTime, formatTime, relativeDays } from "@/lib/dates";
@@ -46,12 +48,15 @@ export function Dashboard({ locale }: { locale: Locale }) {
     () => (mounted ? db().listClients({ ownerId: user.id }) : Promise.resolve([])),
     [mounted, user.id],
   );
+  // Completed tasks are fetched too — the panel keeps them behind a
+  // "show completed" toggle so ticking something off does not make it vanish.
   const tasks = useAsync(
-    () =>
-      mounted
-        ? db().listTasks({ assigneeId: user.id, openOnly: true })
-        : Promise.resolve([]),
+    () => (mounted ? db().listTasks({ assigneeId: user.id }) : Promise.resolve([])),
     [mounted, user.id],
+  );
+  const allClients = useAsync(
+    () => (mounted ? db().listClients() : Promise.resolve([])),
+    [mounted],
   );
   const recent = useAsync(
     () =>
@@ -88,14 +93,6 @@ export function Dashboard({ locale }: { locale: Locale }) {
       .slice(0, 6);
   }, [clients.data]);
 
-  const now = Date.now();
-  const openTasks = tasks.data ?? [];
-  const overdue = openTasks.filter(
-    (t) => t.dueAt && new Date(t.dueAt).getTime() < now,
-  );
-  const upcoming = openTasks.filter(
-    (t) => !t.dueAt || new Date(t.dueAt).getTime() >= now,
-  );
 
   return (
     <div className="space-y-5">
@@ -137,6 +134,17 @@ export function Dashboard({ locale }: { locale: Locale }) {
       <div className="grid gap-4 lg:grid-cols-3">
         {/* --- Main column ------------------------------------------- */}
         <div className="space-y-4 lg:col-span-2">
+          <QuickLog
+            clients={allClients.data ?? []}
+            locale={locale}
+            onLogged={() => {
+              recent.reload();
+              stats.reload();
+              clients.reload();
+              allClients.reload();
+            }}
+          />
+
           <Card>
             <CardHeader title={m.dashboard.timeline} hint={m.dashboard.thisWeek} />
             {recent.loading ? (
@@ -181,38 +189,19 @@ export function Dashboard({ locale }: { locale: Locale }) {
             )}
           </Card>
 
-          <Card>
-            <CardHeader
-              title={m.client.tasks}
-              hint={`${openTasks.length} ${m.dashboard.upcoming.toLowerCase()}`}
+          {tasks.loading ? (
+            <Skeleton className="h-40" />
+          ) : (
+            <TaskPanel
+              tasks={tasks.data ?? []}
+              clients={allClients.data ?? []}
+              locale={locale}
+              onChanged={() => {
+                tasks.reload();
+                stats.reload();
+              }}
             />
-            {tasks.loading ? (
-              <Skeleton className="h-28" />
-            ) : openTasks.length === 0 ? (
-              <p className="text-xs text-faint">{m.dashboard.noTasks}</p>
-            ) : (
-              <div className="space-y-4">
-                {overdue.length ? (
-                  <TaskGroup
-                    label={m.dashboard.overdue}
-                    tasks={overdue}
-                    tone="critical"
-                    locale={locale}
-                    onChange={tasks.reload}
-                  />
-                ) : null}
-                {upcoming.length ? (
-                  <TaskGroup
-                    label={m.dashboard.upcoming}
-                    tasks={upcoming}
-                    tone="muted"
-                    locale={locale}
-                    onChange={tasks.reload}
-                  />
-                ) : null}
-              </div>
-            )}
-          </Card>
+          )}
         </div>
 
         {/* --- Right rail -------------------------------------------- */}
@@ -356,68 +345,5 @@ function Line({
   );
 }
 
-function TaskGroup({
-  label,
-  tasks,
-  tone,
-  locale,
-  onChange,
-}: {
-  label: string;
-  tasks: Task[];
-  tone: "critical" | "muted";
-  locale: Locale;
-  onChange: () => void;
-}) {
-  return (
-    <div>
-      <div
-        className="mb-2 text-[11px] font-semibold tracking-wide uppercase"
-        style={{
-          color: tone === "critical" ? "var(--critical)" : "var(--muted)",
-        }}
-      >
-        {label} · {tasks.length}
-      </div>
-      <ul className="space-y-1.5">
-        {tasks.map((t) => (
-          <li key={t.id} className="flex items-start gap-2.5">
-            <button
-              type="button"
-              aria-label={t.title}
-              onClick={async () => {
-                await db().toggleTask(t.id, true);
-                onChange();
-              }}
-              className="mt-0.5 size-4 shrink-0 rounded-sm border border-border-strong transition-colors hover:border-accent hover:bg-accent-soft"
-            />
-            <div className="min-w-0 flex-1">
-              <span className="block text-sm">{t.title}</span>
-              {t.dueAt ? (
-                <span
-                  className="text-[11px]"
-                  style={{
-                    color:
-                      tone === "critical" ? "var(--critical)" : "var(--faint)",
-                  }}
-                >
-                  {relativeDays(t.dueAt, locale)}
-                </span>
-              ) : null}
-            </div>
-            {t.clientId ? (
-              <Link
-                href={`/${locale}/clients/${t.clientId}`}
-                className="shrink-0 text-[11px] text-faint hover:text-accent"
-              >
-                →
-              </Link>
-            ) : null}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
 
 export { formatTime };
