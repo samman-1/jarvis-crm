@@ -281,7 +281,7 @@ export function NewClientForm({ locale }: { locale: Locale }) {
             <Select value={ownerId} onChange={(e) => setOwnerId(e.target.value)}>
               {PUBLIC_MEMBERS.map((p) => (
                 <option key={p.id} value={p.id}>
-                  #{p.slot} {locale === "ar" ? p.nameAr : p.name}
+                  {locale === "ar" ? p.nameAr : p.name}
                   {p.id === user.id ? ` (${m.common.you})` : ""}
                 </option>
               ))}

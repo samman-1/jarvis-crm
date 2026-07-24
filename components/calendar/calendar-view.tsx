@@ -14,6 +14,7 @@ import {
   Skeleton,
 } from "@/components/ui/primitives";
 import { MemberBadge } from "@/components/ui/badges";
+import { HoursGrid } from "@/components/attendance/hours-grid";
 import { PageHeader } from "@/components/shell/page-header";
 import { PUBLIC_MEMBERS } from "@/lib/config/members";
 import {
@@ -142,6 +143,16 @@ export function CalendarView({ locale }: { locale: Locale }) {
         }
       />
 
+      {/* Your own timesheet comes first — it is the thing you actually
+          come to this page to do. */}
+      <HoursGrid
+        locale={locale}
+        onSaved={() => {
+          attendance.reload();
+          teamStats.reload();
+        }}
+      />
+
       <DecisionPanel
         stats={teamStats.data ?? []}
         schedule={schedule.data ?? []}
@@ -243,7 +254,7 @@ export function CalendarView({ locale }: { locale: Locale }) {
                             .filter(Boolean)
                             .join(" · ")}
                         >
-                          <span className="font-semibold">#{member?.slot}</span>
+                          <span className="font-semibold">{member?.initials}</span>
                           <span className="tnum truncate">
                             {a.checkInAt ? formatTime(a.checkInAt) : "—"}
                           </span>
@@ -264,7 +275,7 @@ export function CalendarView({ locale }: { locale: Locale }) {
                           )}
                           title={d.note}
                         >
-                          {member ? `#${member.slot} ` : ""}
+                          {member ? `${member.initials} ` : ""}
                           {d.dayType === "off" ? m.calendar.dayOff : m.calendar.working}
                         </div>
                       );
@@ -473,13 +484,13 @@ function WeekDetail({ locale }: { locale: Locale }) {
 
   return (
     <Card>
-      <CardHeader title={m.calendar.week} hint={m.team.attendance} />
+      <CardHeader title={m.hours.teamHours} hint={m.calendar.week} />
       <div className="overflow-x-auto">
         <table className="w-full min-w-[640px] text-sm">
           <thead>
             <tr className="border-b border-border text-[11px] tracking-wide text-muted uppercase">
               <th className="py-2 text-start font-medium">{m.team.title}</th>
-              {WEEK.filter((d) => d.scored).map((d) => (
+              {WEEK.filter((d) => d.type !== "off").map((d) => (
                 <th key={d.key} className="py-2 text-center font-medium">
                   {locale === "ar" ? d.labelAr : d.label}
                 </th>
@@ -497,7 +508,7 @@ function WeekDetail({ locale }: { locale: Locale }) {
                     </span>
                   </span>
                 </td>
-                {WEEK.filter((d) => d.scored).map((d) => {
+                {WEEK.filter((d) => d.type !== "off").map((d) => {
                   const dateKey = toDateKey(addDays(startOfWorkWeek(new Date()), d.day));
                   const record = rows.find((r) => r.date === dateKey);
                   return (

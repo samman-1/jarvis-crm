@@ -23,6 +23,7 @@ import {
   StageChip,
 } from "@/components/ui/badges";
 import { PageHeader } from "@/components/shell/page-header";
+import { HoursGrid } from "@/components/attendance/hours-grid";
 import { breakdownBars, scoreBand } from "@/lib/efficiency";
 import { rangeFor } from "@/lib/dates";
 import { formatDateTime, formatTime, relativeDays } from "@/lib/dates";
@@ -213,6 +214,15 @@ export function Dashboard({ locale }: { locale: Locale }) {
 
         {/* --- Right rail -------------------------------------------- */}
         <div className="space-y-4">
+          {/* Filling in hours is the most frequent thing anyone does here,
+              so it sits on the landing page rather than a page away. */}
+          <HoursGrid
+            locale={locale}
+            onSaved={() => {
+              stats.reload();
+            }}
+          />
+
           <Card>
             <CardHeader
               title={m.dashboard.topClients}

@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/i18n/config";
+import { BRAND } from "@/lib/config/brand";
 
 /**
  * All user-facing copy lives here, in both languages.
@@ -9,9 +10,9 @@ import type { Locale } from "@/lib/i18n/config";
  */
 const en = {
   brand: {
-    name: "JARVIS",
-    system: "Internal CRM",
-    agency: "Jarvis AI Agency",
+    name: BRAND.name,
+    system: BRAND.tagline,
+    agency: BRAND.company,
   },
   login: {
     title: "Who is signing in?",
@@ -275,6 +276,20 @@ const en = {
     phaseNoticeBody:
       "This build has no database yet. Everything you add is saved in this browser only — the other members will not see it. Shared data starts when Supabase is connected.",
   },
+  hours: {
+    title: "My hours this week",
+    hint: "Type the time you started and finished each day. You can fill it in later.",
+    from: "Started",
+    to: "Finished",
+    notEntered: "not entered",
+    addNote: "Add a note",
+    reasonPlaceholder: "Why? e.g. client moved the meeting to 10:30",
+    footnote:
+      "Only you can edit your hours. Everyone can see them. Wednesday and Thursday only count when they are voted as working days.",
+    thisWeek: "This week",
+    lastWeek: "Last week",
+    teamHours: "Everyone's hours",
+  },
   stages: {
     lead: "Lead",
     contacted: "Contacted",
@@ -290,9 +305,9 @@ type Messages = typeof en;
 
 const ar: Messages = {
   brand: {
-    name: "جارفس",
-    system: "النظام الداخلي",
-    agency: "وكالة جارفس للذكاء الاصطناعي",
+    name: BRAND.nameAr,
+    system: BRAND.taglineAr,
+    agency: BRAND.companyAr,
   },
   login: {
     title: "من يسجّل الدخول؟",
@@ -551,6 +566,20 @@ const ar: Messages = {
     phaseNotice: "وضع تجريبي",
     phaseNoticeBody:
       "لا توجد قاعدة بيانات بعد. كل ما تضيفه يُحفظ في هذا المتصفح فقط — لن يراه بقية الأعضاء. تبدأ البيانات المشتركة عند ربط Supabase.",
+  },
+  hours: {
+    title: "ساعاتي هذا الأسبوع",
+    hint: "اكتب وقت البداية والنهاية لكل يوم. يمكنك تعبئتها لاحقاً.",
+    from: "البداية",
+    to: "النهاية",
+    notEntered: "لم تُدخل",
+    addNote: "إضافة ملاحظة",
+    reasonPlaceholder: "السبب؟ مثال: العميل أجّل الموعد إلى ١٠:٣٠",
+    footnote:
+      "أنت فقط من يعدّل ساعاتك، والجميع يراها. الأربعاء والخميس يُحتسبان فقط عند اعتمادهما كأيام دوام.",
+    thisWeek: "هذا الأسبوع",
+    lastWeek: "الأسبوع الماضي",
+    teamHours: "ساعات الفريق",
   },
   stages: {
     lead: "عميل محتمل",

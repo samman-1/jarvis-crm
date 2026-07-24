@@ -132,7 +132,7 @@ export function ClientDetail({
               {m.client.closedBy}{" "}
               <span className="font-semibold text-fg">
                 {closer
-                  ? `${locale === "ar" ? closer.nameAr : closer.name} (#${closer.slot})`
+                  ? (locale === "ar" ? closer.nameAr : closer.name)
                   : "—"}
               </span>{" "}
               · {formatDate(client.closedAt, locale)}

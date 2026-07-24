@@ -7,7 +7,7 @@ It answers four questions:
 1. **Who has been to this client?** Every company any of us has contacted, with stage, status, contact card and full history.
 2. **Should I go there at all?** Typing a company name into the new-client form checks it against everyone's clients before you waste a morning. Companies marked **dead** produce a hard block with the reason and who closed it.
 3. **What has everyone else been doing?** Any member can see any other member's week, month or last three months — clients, activity, tasks, attendance, efficiency.
-4. **Who is working when?** The Sun/Mon/Tue 09:00–14:00 field schedule, check-in / check-out with reasons, and the Tuesday review where Wednesday and Thursday get decided per person.
+4. **Who is working when?** Each person types the time they started and finished on Sunday through Thursday — filled in from a phone, whenever suits, not clocked live. Short days ask for a reason. The Tuesday review then decides Wednesday and Thursday per person.
 
 ---
 

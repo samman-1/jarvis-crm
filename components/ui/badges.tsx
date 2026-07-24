@@ -83,9 +83,9 @@ export function MemberBadge({
           color: muted ? "var(--faint)" : member.color,
           boxShadow: `inset 0 0 0 1px ${member.color}55`,
         }}
-        title={`${locale === "ar" ? member.nameAr : member.name} — #${member.slot}`}
+        title={locale === "ar" ? member.nameAr : member.name}
       >
-        {member.slot}
+        {member.initials}
       </span>
       {showName ? (
         <span className="text-xs font-medium" style={{ color: member.color }}>

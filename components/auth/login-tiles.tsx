@@ -121,7 +121,7 @@ export function LoginTiles({ locale }: { locale: string }) {
                   boxShadow: `inset 0 0 0 1px ${member.color}55`,
                 }}
               >
-                {member.slot}
+                {member.initials}
               </span>
               <span className="block font-display text-base font-semibold">
                 {locale === "ar" ? member.nameAr : member.name}
@@ -146,7 +146,7 @@ export function LoginTiles({ locale }: { locale: string }) {
                 boxShadow: `inset 0 0 0 1px ${selected.color}55`,
               }}
             >
-              {selected.slot}
+              {selected.initials}
             </span>
             <div className="min-w-0">
               <div className="font-display text-sm font-semibold">

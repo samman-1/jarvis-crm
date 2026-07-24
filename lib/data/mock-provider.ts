@@ -37,6 +37,7 @@ import { MEMBERS } from "@/lib/config/members";
 import { computeEfficiency } from "@/lib/efficiency";
 import {
   daysInRange,
+  fromDateKey,
   inRange,
   isoNow,
   minutesOfDay,
@@ -665,40 +666,54 @@ export class MockProvider implements DataProvider {
     };
   }
 
-  async checkIn(memberId: string, reason = ""): Promise<Attendance> {
-    const date = toDateKey(new Date());
+  /**
+   * The timesheet write.
+   *
+   * "09:15" on 2026-07-19 becomes a real timestamp on that date. Because the
+   * times are typed rather than clocked, a member can fill Sunday in on
+   * Wednesday — which is how this actually gets used.
+   */
+  async setHours(
+    memberId: string,
+    date: string,
+    hours: {
+      checkIn: string | null;
+      checkOut: string | null;
+      reason?: string;
+      absent?: boolean;
+    },
+  ): Promise<Attendance> {
     const existing = this.data.attendance.find(
       (a) => a.memberId === memberId && a.date === date,
     );
     const base = existing ?? this.blankAttendance(memberId, date);
-    const updated = this.recompute({
+
+    const toStamp = (hhmm: string | null): string | null => {
+      if (!hhmm || !/^\d{1,2}:\d{2}$/.test(hhmm)) return null;
+      const [h, min] = hhmm.split(":").map(Number);
+      const d = fromDateKey(date);
+      d.setHours(h, min, 0, 0);
+      return d.toISOString();
+    };
+
+    const merged: Attendance = {
       ...base,
-      checkInAt: isoNow(),
-      reason: reason || base.reason,
-    });
+      checkInAt: hours.absent ? null : toStamp(hours.checkIn),
+      checkOutAt: hours.absent ? null : toStamp(hours.checkOut),
+      reason: hours.reason ?? base.reason,
+    };
+
+    const updated = hours.absent
+      ? { ...merged, status: "absent" as const, minutesWorked: 0 }
+      : merged.checkInAt
+        ? this.recompute(merged)
+        : { ...merged, status: "absent" as const, minutesWorked: 0, reason: hours.reason ?? "" };
 
     if (existing) {
       this.data.attendance[this.data.attendance.indexOf(existing)] = updated;
     } else {
       this.data.attendance.push(updated);
     }
-    this.touch();
-    return updated;
-  }
-
-  async checkOut(memberId: string, reason = ""): Promise<Attendance> {
-    const date = toDateKey(new Date());
-    const existing = this.data.attendance.find(
-      (a) => a.memberId === memberId && a.date === date,
-    );
-    if (!existing) throw new Error("You have not checked in today.");
-
-    const updated = this.recompute({
-      ...existing,
-      checkOutAt: isoNow(),
-      reason: reason || existing.reason,
-    });
-    this.data.attendance[this.data.attendance.indexOf(existing)] = updated;
     this.touch();
     return updated;
   }
@@ -792,7 +807,12 @@ export class MockProvider implements DataProvider {
     ).length;
 
     const efficiency = computeEfficiency({
-      attendance: attendance.filter((a) => isScoredDay(new Date(a.date).getDay())),
+      // Field days always count. Wednesday and Thursday only count once a
+      // member has actually entered hours for them — which happens when the
+      // Tuesday review turns them into working days.
+      attendance: attendance.filter(
+        (a) => isScoredDay(fromDateKey(a.date).getDay()) || Boolean(a.checkInAt),
+      ),
       interactions,
       tasks: tasksInRange,
       stageAdvances,

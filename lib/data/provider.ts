@@ -85,8 +85,25 @@ export interface DataProvider {
   /* --- Attendance -------------------------------------------------- */
   attendanceFor(memberId: string, range: DateRange): Promise<Attendance[]>;
   attendanceToday(memberId: string): Promise<Attendance | null>;
-  checkIn(memberId: string, reason?: string): Promise<Attendance>;
-  checkOut(memberId: string, reason?: string): Promise<Attendance>;
+
+  /**
+   * Write the hours for one day, as typed by the member.
+   *
+   * Times are plain "HH:MM" strings in Riyadh local time — this is a
+   * timesheet you fill in, not a live clock you punch. Passing null for
+   * both times clears the day. `absent` marks the day as not worked.
+   */
+  setHours(
+    memberId: string,
+    date: string,
+    hours: {
+      checkIn: string | null;
+      checkOut: string | null;
+      reason?: string;
+      absent?: boolean;
+    },
+  ): Promise<Attendance>;
+
   setAttendance(
     memberId: string,
     date: string,

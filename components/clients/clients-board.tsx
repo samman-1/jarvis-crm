@@ -164,7 +164,7 @@ export function ClientsBoard({ locale }: { locale: Locale }) {
             <option value="">{m.clients.filterOwner}: {m.common.all}</option>
             {PUBLIC_MEMBERS.map((p) => (
               <option key={p.id} value={p.id}>
-                #{p.slot} {locale === "ar" ? p.nameAr : p.name}
+                {locale === "ar" ? p.nameAr : p.name}
                 {p.id === user.id ? ` (${m.common.you})` : ""}
               </option>
             ))}

@@ -67,7 +67,7 @@ function MatchCard({
   const owner = PUBLIC_MEMBERS.find((p) => p.id === client.ownerId);
   const closer = PUBLIC_MEMBERS.find((p) => p.id === client.closedById) ?? owner;
   const ownerName = owner
-    ? `${locale === "ar" ? owner.nameAr : owner.name} (#${owner.slot})`
+    ? (locale === "ar" ? owner.nameAr : owner.name)
     : "—";
 
   /* ---------------- Dead: the hard stop ---------------- */
@@ -97,7 +97,7 @@ function MatchCard({
               {m.duplicate.deadBy}{" "}
               <span className="font-semibold text-fg">
                 {closer
-                  ? `${locale === "ar" ? closer.nameAr : closer.name} (#${closer.slot})`
+                  ? (locale === "ar" ? closer.nameAr : closer.name)
                   : "—"}
               </span>{" "}
               {m.duplicate.deadOn}{" "}

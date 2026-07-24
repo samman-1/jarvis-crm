@@ -128,8 +128,12 @@ export function memberColor(id: string): string {
   return getMember(id)?.color ?? "var(--muted)";
 }
 
-/** "Ehano (#1)" — the way a member is referred to in warnings and logs. */
+/**
+ * How a member is named in warnings and logs.
+ *
+ * Just the name — we used to append "(#1)" but with only three people the
+ * numbers were noise once the real names were in.
+ */
 export function memberLabel(id: string): string {
-  const m = getMember(id);
-  return m ? `${m.name} (#${m.slot})` : "Unknown";
+  return getMember(id)?.name ?? "Unknown";
 }

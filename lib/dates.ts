@@ -126,24 +126,28 @@ export function formatDateTime(iso: string | null, locale: "en" | "ar" = "en"): 
   }).format(new Date(iso));
 }
 
+/**
+ * Clock times are handled in the device's local timezone, not forced to
+ * Riyadh. The whole team is in Saudi, so local *is* Riyadh — and because
+ * hours are typed by hand rather than clocked, forcing a conversion would
+ * make "09:00" render back as something else on a machine set elsewhere.
+ */
 export function formatTime(iso: string | null): string {
   if (!iso) return "—";
-  return new Intl.DateTimeFormat("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: TIMEZONE,
-  }).format(new Date(iso));
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(
+    d.getMinutes(),
+  ).padStart(2, "0")}`;
 }
 
-/** Minutes since midnight for a timestamp, in Riyadh time. */
+/** Minutes since local midnight. */
 export function minutesOfDay(iso: string): number {
-  const parts = new Intl.DateTimeFormat("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: TIMEZONE,
-  }).format(new Date(iso));
-  const [h, m] = parts.split(":").map(Number);
-  return h * 60 + m;
+  const d = new Date(iso);
+  return d.getHours() * 60 + d.getMinutes();
+}
+
+/** "09:15" for an <input type="time">, or "" when unset. */
+export function toTimeInput(iso: string | null): string {
+  if (!iso) return "";
+  return formatTime(iso);
 }
