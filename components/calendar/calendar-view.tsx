@@ -179,7 +179,7 @@ export function CalendarView({ locale }: { locale: Locale }) {
           ))}
         </div>
 
-        {attendance.loading ? (
+        {!mounted || attendance.loading ? (
           <Skeleton className="h-96 rounded-none" />
         ) : (
           <div className="grid grid-cols-7">

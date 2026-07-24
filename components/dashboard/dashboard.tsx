@@ -61,9 +61,12 @@ export function Dashboard({ locale }: { locale: Locale }) {
     [mounted, user.id, range.from],
   );
 
+  // The server has no idea what time it is where you are, so the greeting is
+  // decided after mount rather than guessed during SSR.
   const hour = new Date().getHours();
-  const greeting =
-    hour < 12
+  const greeting = !mounted
+    ? m.dashboard.greetingMorning
+    : hour < 12
       ? m.dashboard.greetingMorning
       : hour < 17
         ? m.dashboard.greetingAfternoon

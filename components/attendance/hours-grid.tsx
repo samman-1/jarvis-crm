@@ -88,7 +88,10 @@ export function HoursGrid({
     }
   }
 
-  if (loading) return <Skeleton className="h-64" />;
+  // Everything below depends on the device's clock and timezone. Rendering it
+  // on the server would produce different text than the browser and trip a
+  // hydration mismatch, so it waits for mount.
+  if (!mounted || loading) return <Skeleton className="h-64" />;
 
   return (
     <Card>
