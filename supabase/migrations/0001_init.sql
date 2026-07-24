@@ -5,6 +5,8 @@
 -- Run it only when we are ready to move off the local mock provider.
 --
 -- Design notes:
+--   * All three members are equal. There are no roles and no admin — the
+--     product only works if nobody can quietly edit the record.
 --   * All three members can read everything. Full transparency is the product.
 --   * Ownership and stage changes are audited, so nothing moves silently.
 --   * `status` is separate from `stage` — a client can be at "proposal" and
@@ -18,7 +20,6 @@ create extension if not exists "uuid-ossp";
 -- Enums
 -- --------------------------------------------------------------------------
 
-create type member_role      as enum ('ceo', 'cto', 'cmo');
 create type client_stage     as enum ('lead','contacted','meeting','proposal','negotiation','won','lost');
 create type client_status    as enum ('active','on_hold','won','lost_retryable','dead');
 create type interaction_type as enum ('visit','call','whatsapp','email','meeting','proposal_sent','follow_up');
@@ -36,7 +37,6 @@ create table members (
   slot           smallint not null unique check (slot between 1 and 3),
   name           text not null,
   name_ar        text not null default '',
-  role           member_role not null,
   email          text not null unique,
   phone          text not null default '',
   color          text not null,

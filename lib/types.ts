@@ -307,5 +307,4 @@ export interface SessionUser {
   id: string;
   slot: 1 | 2 | 3;
   name: string;
-  role: string;
 }

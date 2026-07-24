@@ -34,7 +34,6 @@ export async function POST(request: Request) {
     id: member.id,
     slot: member.slot,
     name: member.name,
-    role: member.role,
   });
 
   const response = NextResponse.json({

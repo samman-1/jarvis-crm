@@ -137,9 +137,7 @@ export function AppShell({
               <div className="truncate text-sm font-medium">
                 {locale === "ar" ? member.nameAr : member.name}
               </div>
-              <div className="truncate text-[11px] text-faint">
-                {locale === "ar" ? member.roleLabelAr : member.roleLabel}
-              </div>
+
             </div>
             <button
               type="button"

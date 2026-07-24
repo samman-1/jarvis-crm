@@ -13,17 +13,12 @@
  * Generate a new hash with:  node scripts/hash-password.mjs "my new password"
  */
 
-export type MemberRole = "ceo" | "cto" | "cmo";
-
 export interface MemberConfig {
   id: string;
   /** 1, 2 or 3 — the number on the login tile. */
   slot: 1 | 2 | 3;
   name: string;
   nameAr: string;
-  role: MemberRole;
-  roleLabel: string;
-  roleLabelAr: string;
   /** Used for the Phase B Supabase Auth mapping. Never shown in the UI. */
   email: string;
   phone: string;
@@ -45,9 +40,6 @@ export const MEMBERS: MemberConfig[] = [
     slot: 1,
     name: "Ehano",
     nameAr: "إيهانو",
-    role: "ceo",
-    roleLabel: "Chief Executive Officer",
-    roleLabelAr: "الرئيس التنفيذي",
     email: "ehano@jarvis.agency",
     phone: "",
     color: "#f36c34",
@@ -64,9 +56,6 @@ export const MEMBERS: MemberConfig[] = [
     slot: 2,
     name: "Sammoni",
     nameAr: "سموني",
-    role: "cto",
-    roleLabel: "Chief Technology Officer",
-    roleLabelAr: "الرئيس التقني",
     email: "sammoni@jarvis.agency",
     phone: "",
     color: "#58a2e6",
@@ -83,9 +72,6 @@ export const MEMBERS: MemberConfig[] = [
     slot: 3,
     name: "Aboodi",
     nameAr: "عبودي",
-    role: "cmo",
-    roleLabel: "Chief Marketing Officer",
-    roleLabelAr: "الرئيس التسويقي",
     email: "aboodi@jarvis.agency",
     phone: "",
     color: "#46bd82",

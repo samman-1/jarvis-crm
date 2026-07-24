@@ -365,9 +365,7 @@ function CompareGrid({
                 <div className="truncate font-display text-sm font-semibold">
                   {locale === "ar" ? member.nameAr : member.name}
                 </div>
-                <div className="truncate text-xs text-faint">
-                  {locale === "ar" ? member.roleLabelAr : member.roleLabel}
-                </div>
+
               </div>
               <div className="ms-auto">
                 <Ring

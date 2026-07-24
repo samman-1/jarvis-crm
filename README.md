@@ -28,11 +28,14 @@ npm run dev          # http://localhost:3000
 
 Temporary passwords, changeable in `lib/config/members.ts` or via environment variables:
 
-| Slot | Member  | Role | Password  |
-|------|---------|------|-----------|
-| 1    | Ehano   | CEO  | `jarvis1` |
-| 2    | Sammoni | CTO  | `jarvis2` |
-| 3    | Aboodi  | CMO  | `jarvis3` |
+| Member  | Password  |
+|---------|-----------|
+| Ehano   | `jarvis1` |
+| Sammoni | `jarvis2` |
+| Aboodi  | `jarvis3` |
+
+All three accounts are identical. There are no roles and no admin — everyone
+sees everything, and nobody can edit anyone else's hours.
 
 Change one properly:
 
@@ -91,7 +94,7 @@ Weights live in `lib/efficiency.ts`. It feeds the Tuesday Wed/Thu recommendation
 
 ## Getting real data in
 
-`docs/CLIENT-INTAKE.md` is the questionnaire to send Ehano and Aboodi, with `docs/clients-template.csv` for anyone who prefers a spreadsheet. Their answers replace `lib/data/seed.ts`.
+`docs/WHAT-WE-NEED.md` is the short list to send round: company name, what happened, and whether it is finished for good. Those answers replace `lib/data/seed.ts`.
 
 ---
 
@@ -102,7 +105,7 @@ Weights live in `lib/efficiency.ts`. It feeds the Tuesday Wed/Thu recommendation
 3. Seed the three members into `auth.users` and `members`.
 4. Write `lib/data/supabase-provider.ts` against `DataProvider`.
 5. Set `NEXT_PUBLIC_DATA_MODE=supabase` plus the URL and anon key.
-6. Point the login route at `signInWithPassword` using each slot's email.
+6. Point the login route at `signInWithPassword` using each member's email.
 
 Everything above that line stays exactly as it is.
 

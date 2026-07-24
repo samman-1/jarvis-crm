@@ -87,7 +87,6 @@ export async function verifySession(
       id: payload.id,
       slot: payload.slot,
       name: payload.name,
-      role: payload.role,
     };
   } catch {
     return null;

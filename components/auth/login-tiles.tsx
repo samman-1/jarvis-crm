@@ -126,9 +126,7 @@ export function LoginTiles({ locale }: { locale: string }) {
               <span className="block font-display text-base font-semibold">
                 {locale === "ar" ? member.nameAr : member.name}
               </span>
-              <span className="mt-1 block text-xs text-muted">
-                {locale === "ar" ? member.roleLabelAr : member.roleLabel}
-              </span>
+
             </button>
           ))}
         </div>
@@ -152,9 +150,7 @@ export function LoginTiles({ locale }: { locale: string }) {
               <div className="font-display text-sm font-semibold">
                 {locale === "ar" ? selected.nameAr : selected.name}
               </div>
-              <div className="truncate text-xs text-muted">
-                {locale === "ar" ? selected.roleLabelAr : selected.roleLabel}
-              </div>
+
             </div>
           </div>
 

@@ -83,9 +83,7 @@ export function SettingsView({ locale }: { locale: Locale }) {
             <div className="font-display text-base font-semibold">
               {locale === "ar" ? member.nameAr : member.name}
             </div>
-            <div className="text-sm text-muted">
-              {locale === "ar" ? member.roleLabelAr : member.roleLabel}
-            </div>
+
           </div>
         </div>
 
