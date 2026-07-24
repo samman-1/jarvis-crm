@@ -26,25 +26,26 @@ npm install
 npm run dev          # http://localhost:3000
 ```
 
-Temporary passwords, changeable in `lib/config/members.ts` or via environment variables:
+### Passwords
 
-| Member  | Password  |
-|---------|-----------|
-| Ehano   | `jarvis1` |
-| Sammoni | `jarvis2` |
-| Aboodi  | `jarvis3` |
+**This repository is public. No password is stored in it.**
+
+Each member's password is read from an environment variable at request time:
+
+| Variable | Member |
+|---|---|
+| `JARVIS_PASSWORD_1` | Ehano |
+| `JARVIS_PASSWORD_2` | Sammoni |
+| `JARVIS_PASSWORD_3` | Aboodi |
+
+Set them in Vercel for production, and in `.env.local` (git-ignored) to run
+locally — copy `.env.example` to start. If a variable is missing, that member
+cannot sign in; the app fails closed rather than falling back to a default.
+
+To change a password: edit the variable in Vercel and redeploy. No code change.
 
 All three accounts are identical. There are no roles and no admin — everyone
 sees everything, and nobody can edit anyone else's hours.
-
-Change one properly:
-
-```bash
-node scripts/hash-password.mjs "a better password"
-# paste the result into that member's passwordHash
-```
-
-Or set `JARVIS_PASSWORD_1/2/3` in Vercel — those win over the committed hash and need no code change.
 
 ---
 

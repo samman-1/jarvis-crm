@@ -4,13 +4,13 @@
  * This is the ONLY place team members are defined. Changing a name, a colour,
  * or a password here changes it everywhere in the app.
  *
- * Passwords are scrypt hashes in `salt:hash` form — never plaintext.
- * Each member's password can be overridden in production without a code change
- * by setting JARVIS_PASSWORD_1 / _2 / _3 to a *plaintext* password in the
- * environment (Vercel → Settings → Environment Variables). When that variable
- * is present it wins over the hash below.
+ * NO PASSWORDS LIVE HERE. This repository is public.
  *
- * Generate a new hash with:  node scripts/hash-password.mjs "my new password"
+ * Each member's password is read from an environment variable at request time
+ * — JARVIS_PASSWORD_1 / _2 / _3 — set in Vercel and in .env.local for local
+ * development. If the variable is missing, that member simply cannot sign in.
+ *
+ * To change a password: update the variable in Vercel and redeploy.
  */
 
 export interface MemberConfig {
@@ -28,9 +28,10 @@ export interface MemberConfig {
   /** Planned field-day window, local Riyadh time. */
   plannedStart: string;
   plannedEnd: string;
-  /** scrypt `salt:hash`. Default is the temporary password noted alongside. */
-  passwordHash: string;
-  /** Name of the env var that overrides the hash with a plaintext password. */
+  /**
+   * Name of the environment variable holding this member's password.
+   * The password itself is never stored in this repository.
+   */
   passwordEnvVar: string;
 }
 
@@ -46,9 +47,6 @@ export const MEMBERS: MemberConfig[] = [
     initials: "EH",
     plannedStart: "09:00",
     plannedEnd: "14:00",
-    // temporary password: jarvis1
-    passwordHash:
-      "8f2d9708e6c6d342066795e7cd493b76:ffdc766dda96f9c88d868dbb6492d12adb2234d84f10d849ae5eaabecdde078c",
     passwordEnvVar: "JARVIS_PASSWORD_1",
   },
   {
@@ -62,9 +60,6 @@ export const MEMBERS: MemberConfig[] = [
     initials: "SA",
     plannedStart: "09:00",
     plannedEnd: "14:00",
-    // temporary password: jarvis2
-    passwordHash:
-      "829c551df1c068db46ab51f4c9e6d36d:ff1607ce59278440be909e55d3ca7fedc5e168c9164095496a88787fffcb5438",
     passwordEnvVar: "JARVIS_PASSWORD_2",
   },
   {
@@ -78,21 +73,15 @@ export const MEMBERS: MemberConfig[] = [
     initials: "AB",
     plannedStart: "09:00",
     plannedEnd: "14:00",
-    // temporary password: jarvis3
-    passwordHash:
-      "39d951d8344ccb9685d34a4296b7116b:df3e5abd30f890bac79a63787ea56b60aa3729f55550a77982ff1f0d65ee4604",
     passwordEnvVar: "JARVIS_PASSWORD_3",
   },
 ];
 
 /** Members without anything secret — safe to send to the browser. */
-export type PublicMember = Omit<
-  MemberConfig,
-  "passwordHash" | "passwordEnvVar" | "email"
->;
+export type PublicMember = Omit<MemberConfig, "passwordEnvVar" | "email">;
 
 export function toPublicMember(m: MemberConfig): PublicMember {
-  const { passwordHash: _h, passwordEnvVar: _e, email: _m, ...rest } = m;
+  const { passwordEnvVar: _e, email: _m, ...rest } = m;
   return rest;
 }
 
