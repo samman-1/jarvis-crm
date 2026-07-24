@@ -242,9 +242,11 @@ export function TeamView({ locale }: { locale: Locale }) {
                       href={`/${locale}/clients/${c.id}`}
                       className="flex flex-wrap items-center gap-3 py-2.5 transition-colors hover:text-accent"
                     >
+                      {/* Full width on a phone: squeezing the name onto the
+                          same line as four chips truncated it to "Ibn …". */}
                       <span
                         className={cn(
-                          "min-w-0 flex-1 truncate text-sm font-medium",
+                          "w-full min-w-0 truncate text-sm font-medium sm:w-auto sm:flex-1",
                           c.status === "dead" && "text-critical line-through",
                         )}
                       >
