@@ -127,6 +127,28 @@ lands on that day, with the time if you wrote one.
 
 ---
 
+## Ask Jarvis
+
+The assistant button on every page. It answers from your own CRM: your
+clients, what you logged, what you still owe, where you are going next. It
+also drafts the messages nobody wants to write, in English or Arabic.
+
+Each member's conversation is **private and stays on their own device**. It is
+kept in that browser's storage under their member key and never touches the
+shared database, so the other two cannot read it. What leaves the device is
+one request per question, carrying a compact snapshot of the CRM built on the
+server from the signed session, never from anything the browser claims.
+
+It reads; it does not write. Nothing it says creates a client, logs a visit or
+moves a stage. That is on purpose for now: a wrong answer should cost a
+re-read, not a record.
+
+Needs `OPENAI_API_KEY` in Vercel. Without it the panel says so and the rest of
+the app is unaffected. `OPENAI_MODEL` overrides the model, which defaults to
+`gpt-4o-mini`.
+
+---
+
 ## Deploying
 
 ```bash

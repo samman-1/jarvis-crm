@@ -7,6 +7,7 @@ import { useI18n } from "@/components/providers/i18n-provider";
 import { useSession } from "@/components/providers/session-provider";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { LocaleSwitch } from "@/components/shell/locale-switch";
+import { AskJarvis } from "@/components/ai/ask-jarvis";
 import { Button } from "@/components/ui/primitives";
 import type { Locale } from "@/lib/i18n/config";
 import { cn } from "@/lib/utils";
@@ -229,6 +230,10 @@ export function AppShell({
           </Link>
         ))}
       </nav>
+
+      {/* Reachable from every page, because the question usually arrives
+          while you are looking at something else. */}
+      <AskJarvis locale={locale} />
     </div>
   );
 }

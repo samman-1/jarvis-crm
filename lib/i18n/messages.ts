@@ -383,6 +383,25 @@ const en = {
     dupOwned: "Already belongs to",
     dupJoin: "saving will add you to theirs instead of making a copy",
   },
+  ask: {
+    title: "Ask Jarvis",
+    short: "Ask Jarvis",
+    private: "Yours only. The others cannot see this.",
+    intro:
+      "I can see your clients, what you logged and what you still owe. Ask me anything about them, or get me to write the message you were putting off.",
+    placeholder: "Ask anything…",
+    thinking: "Thinking…",
+    clear: "Clear",
+    examples: [
+      "Who have I not contacted in the longest time?",
+      "Write a WhatsApp follow-up for my coldest client, in Arabic.",
+      "What should I do on Sunday?",
+      "Summarise my month in five lines.",
+    ],
+    failed: "Could not get an answer. Try again in a moment.",
+    notConfigured:
+      "Ask Jarvis is not switched on yet. It needs an OpenAI key added to the deployment.",
+  },
   chat: {
     title: "Chat",
     subtitle: "Talk about a client without it getting lost in WhatsApp.",
@@ -837,6 +856,24 @@ const ar: Messages = {
     dupDead: "مغلق نهائياً بواسطة",
     dupOwned: "مسجّل بالفعل باسم",
     dupJoin: "الحفظ سيضيفك إليه بدل إنشاء نسخة",
+  },
+  ask: {
+    title: "اسأل جارفس",
+    short: "اسأل جارفس",
+    private: "لك وحدك. لا يراها الآخرون.",
+    intro:
+      "أرى عملاءك، وما سجّلته، وما بقي عليك. اسألني عنهم، أو دعني أكتب لك الرسالة التي تؤجّلها.",
+    placeholder: "اسأل أي شيء…",
+    thinking: "أفكّر…",
+    clear: "مسح",
+    examples: [
+      "من لم أتواصل معه منذ أطول فترة؟",
+      "اكتب رسالة متابعة على واتساب لأبرد عميل عندي.",
+      "ماذا أفعل يوم الأحد؟",
+      "لخّص شهري في خمسة أسطر.",
+    ],
+    failed: "تعذّر الحصول على إجابة. حاول بعد قليل.",
+    notConfigured: "اسأل جارفس غير مفعّل بعد. يحتاج إلى مفتاح OpenAI في النشر.",
   },
   chat: {
     title: "المحادثة",
