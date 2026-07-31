@@ -261,9 +261,9 @@ alter table audit_log       enable row level security;
 -- The three of us. Equal — no roles, no admin.
 -- --------------------------------------------------------------------------
 insert into members (id, slot, name, name_ar, color, initials) values
-  ('m1', 1, 'Ehano',   'إيهانو', '#f36c34', 'EH'),
-  ('m2', 2, 'Sammoni', 'سموني',  '#58a2e6', 'SA'),
-  ('m3', 3, 'Aboodi',  'عبودي',  '#46bd82', 'AB')
+  ('m1', 1, 'Ehano',   'إيهانو', '#f36c34', 'E'),
+  ('m2', 2, 'Sammoni', 'سموني',  '#58a2e6', 'M'),
+  ('m3', 3, 'Aboodi',  'عبودي',  '#46bd82', 'A')
 on conflict (id) do update
   set name     = excluded.name,
       name_ar  = excluded.name_ar,

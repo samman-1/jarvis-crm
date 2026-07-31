@@ -24,6 +24,10 @@ export interface MemberConfig {
   phone: string;
   /** Distinguishes this member everywhere they appear: badges, calendar, charts. */
   color: string;
+  /**
+   * The single letter on the login tile and every badge. Together the three
+   * read E · M · A — which is the team's own shorthand for itself.
+   */
   initials: string;
   /** Planned field-day window, local Riyadh time. */
   plannedStart: string;
@@ -44,7 +48,7 @@ export const MEMBERS: MemberConfig[] = [
     email: "ehano@jarvis.agency",
     phone: "",
     color: "#f36c34",
-    initials: "EH",
+    initials: "E",
     plannedStart: "09:00",
     plannedEnd: "14:00",
     passwordEnvVar: "JARVIS_PASSWORD_1",
@@ -57,7 +61,7 @@ export const MEMBERS: MemberConfig[] = [
     email: "sammoni@jarvis.agency",
     phone: "",
     color: "#58a2e6",
-    initials: "SA",
+    initials: "M",
     plannedStart: "09:00",
     plannedEnd: "14:00",
     passwordEnvVar: "JARVIS_PASSWORD_2",
@@ -70,7 +74,7 @@ export const MEMBERS: MemberConfig[] = [
     email: "aboodi@jarvis.agency",
     phone: "",
     color: "#46bd82",
-    initials: "AB",
+    initials: "A",
     plannedStart: "09:00",
     plannedEnd: "14:00",
     passwordEnvVar: "JARVIS_PASSWORD_3",
