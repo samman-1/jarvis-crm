@@ -331,16 +331,32 @@ export function parseActivity(
 
     // Match the client by the opening words, which is where the name sits.
     const head = withoutTime.split(/[,\-–—:|]/)[0].trim();
+
+    /*
+     * People do not always put a comma after the company:
+     * "Barakah Logistics follow up visit" is one unbroken phrase. Comparing
+     * the whole line against a client name scores badly, so try the leading
+     * words as well — longest first — and keep the best match found.
+     */
+    const words = head.split(/\s+/).filter(Boolean);
+    const candidates = [head];
+    for (let take = Math.min(5, words.length); take >= 1; take--) {
+      candidates.push(words.slice(0, take).join(" "));
+    }
+
     let matched = "";
     let best = 0;
     for (const c of clients) {
-      const score = Math.max(
-        similarity(head, c.name),
-        c.nameAr ? similarity(head, c.nameAr) : 0,
-      );
-      if (score > best && score >= 0.7) {
-        best = score;
-        matched = c.id;
+      for (const candidate of candidates) {
+        if (candidate.length < 3) continue;
+        const score = Math.max(
+          similarity(candidate, c.name),
+          c.nameAr ? similarity(candidate, c.nameAr) : 0,
+        );
+        if (score > best && score >= 0.7) {
+          best = score;
+          matched = c.id;
+        }
       }
     }
 
