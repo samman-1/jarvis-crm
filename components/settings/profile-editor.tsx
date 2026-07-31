@@ -13,6 +13,7 @@ import {
   Input,
   Skeleton,
 } from "@/components/ui/primitives";
+import { HOURS_ENABLED } from "@/lib/efficiency";
 import type { Locale } from "@/lib/i18n/config";
 
 /** Photos are downscaled before storing — a phone camera shot is far too big. */
@@ -224,25 +225,32 @@ function DetailFields({
 
   return (
     <>
+      {/* Planned hours only mean something while attendance is being scored.
+          With scoring off they were two inputs that changed nothing, sitting
+          under a caption promising they did. */}
       <div className="mt-5 grid gap-3 sm:grid-cols-3">
-        <Field label={m.hours.from}>
-          <Input
-            type="time"
-            value={start}
-            onChange={(e) => setStart(e.target.value)}
-            className="h-11"
-            dir="ltr"
-          />
-        </Field>
-        <Field label={m.hours.to}>
-          <Input
-            type="time"
-            value={end}
-            onChange={(e) => setEnd(e.target.value)}
-            className="h-11"
-            dir="ltr"
-          />
-        </Field>
+        {HOURS_ENABLED ? (
+          <>
+            <Field label={m.hours.from}>
+              <Input
+                type="time"
+                value={start}
+                onChange={(e) => setStart(e.target.value)}
+                className="h-11"
+                dir="ltr"
+              />
+            </Field>
+            <Field label={m.hours.to}>
+              <Input
+                type="time"
+                value={end}
+                onChange={(e) => setEnd(e.target.value)}
+                className="h-11"
+                dir="ltr"
+              />
+            </Field>
+          </>
+        ) : null}
         <Field label={m.actions.contactPhone}>
           <Input
             value={phone}
@@ -253,7 +261,9 @@ function DetailFields({
           />
         </Field>
       </div>
-      <p className="mt-1.5 text-xs text-faint">{m.settings.hoursHint}</p>
+      {HOURS_ENABLED ? (
+        <p className="mt-1.5 text-xs text-faint">{m.settings.hoursHint}</p>
+      ) : null}
 
       {changed ? (
         <Button
