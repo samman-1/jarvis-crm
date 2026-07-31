@@ -56,7 +56,12 @@ export const config = {
      * locale redirect rewrites them to /en/manifest.webmanifest and the phone
      * cannot install the app.
      */
-    "/((?!_next/static|_next/image|api/auth|favicon.ico|manifest.webmanifest|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    /*
+     * `api` covers every route handler, not just auth — anything under /api
+     * must reach its handler untouched. Sending /api/db through the locale
+     * redirect turned every database call into a 404.
+     */
+    "/((?!_next/static|_next/image|api|favicon.ico|manifest.webmanifest|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
 
