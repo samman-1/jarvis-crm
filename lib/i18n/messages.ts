@@ -236,7 +236,7 @@ const en = {
   },
   calendar: {
     title: "Calendar",
-    subtitle: "Field days, attendance and the Wednesday / Thursday decision.",
+    subtitle: "Everything done, day by day. Hours and the week’s plan live under Schedule.",
     month: "Month",
     week: "Week",
     fieldDay: "Field day",
@@ -649,7 +649,7 @@ const ar: Messages = {
   },
   calendar: {
     title: "التقويم",
-    subtitle: "الأيام الميدانية والحضور وقرار الأربعاء والخميس.",
+    subtitle: "كل ما تم إنجازه، يوماً بيوم. الساعات وخطة الأسبوع في تبويب الجدول.",
     month: "شهر",
     week: "أسبوع",
     fieldDay: "يوم ميداني",

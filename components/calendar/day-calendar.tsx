@@ -133,7 +133,7 @@ export function DayCalendar({ locale }: { locale: Locale }) {
                 scope === s ? "bg-accent-soft text-accent" : "text-muted hover:text-fg",
               )}
             >
-              {s === "mine" ? m.calendar.whatIDid : m.calendar.whatWeAllDid}
+              {s === "mine" ? m.common.mine : m.common.everyone}
             </button>
           ))}
         </div>
