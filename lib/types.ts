@@ -28,6 +28,8 @@ export interface Client {
   nameAr: string;
   company: string;
   city: string;
+  /** Street address or a landmark — used to plot the day's route. */
+  address: string;
   industry: string;
   website: string;
   sizeGuess: "small" | "mid" | "large" | "";
@@ -166,6 +168,31 @@ export interface Reminder {
 }
 
 export type ReminderUrgency = "overdue" | "today" | "soon" | "later";
+
+/**
+ * A planned day out: which companies, in which order.
+ *
+ * Written the evening before — "Sunday I'm going to these four" — and then
+ * ticked off during the day. Works with no addresses at all; if there are
+ * addresses it can also hand the whole run to Google Maps.
+ */
+export interface RouteStop {
+  clientId: string;
+  /** Free text overriding the client's own address for this trip. */
+  addressOverride: string;
+  note: string;
+  done: boolean;
+}
+
+export interface DayRoute {
+  id: string;
+  memberId: string;
+  /** yyyy-MM-dd */
+  date: string;
+  title: string;
+  stops: RouteStop[];
+  createdAt: string;
+}
 
 /** A message in the team chat. */
 export interface Message {
@@ -316,6 +343,7 @@ export interface NewClientInput {
   nameAr?: string;
   company?: string;
   city?: string;
+  address?: string;
   industry?: string;
   website?: string;
   stage: Stage;

@@ -46,6 +46,7 @@ const ICONS = {
   bell: "M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0",
   chat: "M21 11.5a8.4 8.4 0 0 1-9 8.4 8.9 8.9 0 0 1-4-.9L3 21l1.9-4.9A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4Z",
   stack: "M12 3 3 8l9 5 9-5-9-5ZM3 16l9 5 9-5M3 12l9 5 9-5",
+  route: "M9 20 3 17V4l6 3 6-3 6 3v13l-6-3-6 3ZM9 7v13M15 4v13",
   logout: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9",
 };
 
@@ -66,13 +67,14 @@ export function AppShell({
     { href: `/${locale}/clients`, label: m.nav.clients, icon: <Icon path={ICONS.clients} /> },
     { href: `/${locale}/team`, label: m.nav.team, icon: <Icon path={ICONS.team} /> },
     { href: `/${locale}/calendar`, label: m.nav.calendar, icon: <Icon path={ICONS.calendar} /> },
+    { href: `/${locale}/routes`, label: m.nav.routes, icon: <Icon path={ICONS.route} /> },
     { href: `/${locale}/reminders`, label: m.nav.reminders, icon: <Icon path={ICONS.bell} /> },
     { href: `/${locale}/chat`, label: m.nav.chat, icon: <Icon path={ICONS.chat} /> },
     { href: `/${locale}/settings`, label: m.nav.settings, icon: <Icon path={ICONS.settings} /> },
   ];
 
   /** Five is all a thumb bar can hold without the labels colliding. */
-  const phoneNav = [nav[0], nav[1], nav[3], nav[5], nav[6]].filter(Boolean);
+  const phoneNav = [nav[0], nav[1], nav[4], nav[3], nav[6]].filter(Boolean);
 
   async function signOut() {
     await fetch("/api/auth/logout", { method: "POST" });

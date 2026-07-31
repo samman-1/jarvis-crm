@@ -40,6 +40,7 @@ export function NewClientForm({ locale }: { locale: Locale }) {
   const [name, setName] = useState("");
   const [nameAr, setNameAr] = useState("");
   const [city, setCity] = useState("");
+  const [address, setAddress] = useState("");
   const [industry, setIndustry] = useState("");
   const [website, setWebsite] = useState("");
 
@@ -109,6 +110,7 @@ export function NewClientForm({ locale }: { locale: Locale }) {
           name: name.trim(),
           nameAr: nameAr.trim(),
           city: city.trim(),
+          address: address.trim(),
           industry: industry.trim(),
           website: website.trim(),
           stage,
@@ -181,6 +183,12 @@ export function NewClientForm({ locale }: { locale: Locale }) {
           </Field>
           <Field label={m.newClient.city}>
             <Input value={city} onChange={(e) => setCity(e.target.value)} />
+          </Field>
+          <Field label={m.newClient.address} hint={m.common.optional}>
+            <Input
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+            />
           </Field>
           <Field label={m.newClient.industry}>
             <Input

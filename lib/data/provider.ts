@@ -7,6 +7,7 @@ import type {
   ClientRow,
   Contact,
   DateRange,
+  DayRoute,
   DuplicateMatch,
   Interaction,
   MemberProfile,
@@ -144,6 +145,13 @@ export interface DataProvider {
    * quiet. Called on login so the nudge is waiting when you arrive.
    */
   refreshAutoReminders(memberId: string): Promise<Reminder[]>;
+
+  /* --- Routes ------------------------------------------------------ */
+  listRoutes(memberId: string, opts?: { from?: string }): Promise<DayRoute[]>;
+  getRoute(id: string): Promise<DayRoute | null>;
+  createRoute(memberId: string, date: string, title: string): Promise<DayRoute>;
+  updateRoute(id: string, patch: Partial<DayRoute>): Promise<DayRoute>;
+  deleteRoute(id: string): Promise<void>;
 
   /* --- Chat -------------------------------------------------------- */
   listThreads(memberId: string): Promise<ThreadSummary[]>;

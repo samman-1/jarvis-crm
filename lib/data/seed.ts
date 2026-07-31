@@ -3,6 +3,7 @@ import type {
   AuditEntry,
   Client,
   Contact,
+  DayRoute,
   Interaction,
   Message,
   Reminder,
@@ -33,6 +34,7 @@ export interface SeedData {
   audit: AuditEntry[];
   reminders: Reminder[];
   messages: Message[];
+  routes: DayRoute[];
   /** Marks the shape of the stored payload so upgrades can be detected. */
   version: number;
 }
@@ -41,7 +43,7 @@ export interface SeedData {
  * Bumped whenever the stored shape changes. A mismatch discards whatever is in
  * localStorage rather than half-migrating it.
  */
-export const SEED_VERSION = 2;
+export const SEED_VERSION = 3;
 
 export function buildSeed(): SeedData {
   return {
@@ -54,6 +56,7 @@ export function buildSeed(): SeedData {
     audit: [],
     reminders: [],
     messages: [],
+    routes: [],
     version: SEED_VERSION,
   };
 }

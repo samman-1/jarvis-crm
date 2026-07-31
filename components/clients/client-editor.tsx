@@ -43,6 +43,7 @@ export function ClientEditor({
     name: client.name,
     nameAr: client.nameAr,
     city: client.city,
+    address: client.address,
     industry: client.industry,
     website: client.website,
     ownerId: client.ownerId,
@@ -71,6 +72,7 @@ export function ClientEditor({
         nameAr: form.nameAr.trim(),
         company: form.name.trim(),
         city: form.city.trim(),
+        address: form.address.trim(),
         industry: form.industry.trim(),
         website: form.website.trim(),
         ownerId: form.ownerId,
@@ -124,6 +126,13 @@ export function ClientEditor({
             <Input
               value={form.city}
               onChange={(e) => set("city", e.target.value)}
+              className="h-11"
+            />
+          </Field>
+          <Field label={m.newClient.address}>
+            <Input
+              value={form.address}
+              onChange={(e) => set("address", e.target.value)}
               className="h-11"
             />
           </Field>

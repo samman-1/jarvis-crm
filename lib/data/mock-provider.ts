@@ -5,6 +5,7 @@ import type {
   Attendance,
   MemberProfile,
   Message,
+  DayRoute,
   ParsedActivityRow,
   ParsedClientRow,
   Reminder,
@@ -224,6 +225,7 @@ export class MockProvider implements DataProvider {
       nameAr: input.nameAr?.trim() ?? "",
       company: (input.company || input.name).trim(),
       city: input.city ?? "",
+      address: input.address ?? "",
       industry: input.industry ?? "",
       website: input.website ?? "",
       sizeGuess: "",
@@ -977,6 +979,56 @@ export class MockProvider implements DataProvider {
   }
 
   /* ---------------------------------------------------------------- *
+   * Routes
+   * ---------------------------------------------------------------- */
+
+  async listRoutes(
+    memberId: string,
+    opts: { from?: string } = {},
+  ): Promise<DayRoute[]> {
+    return this.data.routes
+      .filter(
+        (r) => r.memberId === memberId && (!opts.from || r.date >= opts.from),
+      )
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  async getRoute(id: string): Promise<DayRoute | null> {
+    return this.data.routes.find((r) => r.id === id) ?? null;
+  }
+
+  async createRoute(
+    memberId: string,
+    date: string,
+    title: string,
+  ): Promise<DayRoute> {
+    const route: DayRoute = {
+      id: uid("rt"),
+      memberId,
+      date,
+      title,
+      stops: [],
+      createdAt: isoNow(),
+    };
+    this.data.routes.push(route);
+    this.touch();
+    return route;
+  }
+
+  async updateRoute(id: string, patch: Partial<DayRoute>): Promise<DayRoute> {
+    const idx = this.data.routes.findIndex((r) => r.id === id);
+    if (idx < 0) throw new Error(`Route ${id} not found`);
+    this.data.routes[idx] = { ...this.data.routes[idx], ...patch };
+    this.touch();
+    return this.data.routes[idx];
+  }
+
+  async deleteRoute(id: string): Promise<void> {
+    this.data.routes = this.data.routes.filter((r) => r.id !== id);
+    this.touch();
+  }
+
+  /* ---------------------------------------------------------------- *
    * Chat
    * ---------------------------------------------------------------- */
 
@@ -1133,6 +1185,7 @@ export class MockProvider implements DataProvider {
         {
           name: row.name.trim(),
           city: row.city.trim(),
+          address: "",
           stage: row.stage,
           status: row.status,
           ownerId,
