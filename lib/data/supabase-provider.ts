@@ -66,7 +66,9 @@ export class SupabaseProvider implements DataProvider {
 
   /* --- Clients ----------------------------------------------------- */
   listClients(filter?: ClientFilter) {
-    return call<ClientRow[]>("listClients", [filter]);
+    // JSON turns a missing argument into null, which the server would then
+    // dereference. Send an empty filter instead of nothing.
+    return call<ClientRow[]>("listClients", [filter ?? {}]);
   }
   getClient(id: string) {
     return call<ClientDetail | null>("getClient", [id]);
@@ -255,7 +257,7 @@ export class SupabaseProvider implements DataProvider {
 
   /* --- Audit + housekeeping ---------------------------------------- */
   listAudit(entityId?: string) {
-    return call<AuditEntry[]>("listAudit", [entityId]);
+    return call<AuditEntry[]>("listAudit", [entityId ?? null]);
   }
   async resetToSeed(): Promise<void> {
     throw new Error(

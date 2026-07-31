@@ -162,7 +162,10 @@ export class SupabaseServerProvider implements DataProvider {
     });
   }
 
-  async listClients(filter: ClientFilter = {}): Promise<ClientRow[]> {
+  async listClients(rawFilter: ClientFilter | null = {}): Promise<ClientRow[]> {
+    // Defaults only apply to `undefined`; anything crossing JSON arrives as
+    // null, so normalise here rather than trusting every caller.
+    const filter = rawFilter ?? {};
     let q = this.sb.from("clients").select("*");
     if (filter.stage) q = q.eq("stage", filter.stage);
     if (filter.status) q = q.eq("status", filter.status);
@@ -389,8 +392,9 @@ export class SupabaseServerProvider implements DataProvider {
     id: string,
     status: ClientStatus,
     actorId: string,
-    opts: { reason?: string; revisitAfter?: string | null } = {},
+    rawOpts: { reason?: string; revisitAfter?: string | null } | null = {},
   ): Promise<Client> {
+    const opts = rawOpts ?? {};
     const { data: current } = await this.sb
       .from("clients")
       .select("status,revisit_after")
@@ -586,13 +590,14 @@ export class SupabaseServerProvider implements DataProvider {
   }
 
   async listInteractions(
-    opts: {
+    raw: {
       memberId?: string;
       clientId?: string;
       range?: DateRange;
       limit?: number;
-    } = {},
+    } | null = {},
   ): Promise<Interaction[]> {
+    const opts = raw ?? {};
     let q = this.sb.from("interactions").select("*");
     if (opts.memberId) q = q.eq("member_id", opts.memberId);
     if (opts.clientId) q = q.eq("client_id", opts.clientId);
@@ -610,8 +615,9 @@ export class SupabaseServerProvider implements DataProvider {
    * ---------------------------------------------------------------- */
 
   async listTasks(
-    opts: { assigneeId?: string; clientId?: string; openOnly?: boolean } = {},
+    raw: { assigneeId?: string; clientId?: string; openOnly?: boolean } | null = {},
   ): Promise<Task[]> {
+    const opts = raw ?? {};
     let q = this.sb.from("tasks").select("*");
     if (opts.assigneeId) q = q.eq("assignee_id", opts.assigneeId);
     if (opts.clientId) q = q.eq("client_id", opts.clientId);
@@ -902,8 +908,9 @@ export class SupabaseServerProvider implements DataProvider {
 
   async listReminders(
     memberId: string,
-    opts: { includeDone?: boolean } = {},
+    raw: { includeDone?: boolean } | null = {},
   ): Promise<Reminder[]> {
+    const opts = raw ?? {};
     const { data, error } = await this.sb
       .from("reminders")
       .select("*")
@@ -991,7 +998,11 @@ export class SupabaseServerProvider implements DataProvider {
    * Routes
    * ---------------------------------------------------------------- */
 
-  async listRoutes(memberId: string, opts: { from?: string } = {}): Promise<DayRoute[]> {
+  async listRoutes(
+    memberId: string,
+    raw: { from?: string } | null = {},
+  ): Promise<DayRoute[]> {
+    const opts = raw ?? {};
     let q = this.sb.from("routes").select("*").eq("member_id", memberId);
     if (opts.from) q = q.gte("date", opts.from);
     const { data, error } = await q.order("date");
@@ -1228,7 +1239,7 @@ export class SupabaseServerProvider implements DataProvider {
    * Audit + housekeeping
    * ---------------------------------------------------------------- */
 
-  async listAudit(entityId?: string): Promise<AuditEntry[]> {
+  async listAudit(entityId?: string | null): Promise<AuditEntry[]> {
     let q = this.sb.from("audit_log").select("*");
     if (entityId) q = q.eq("entity_id", entityId);
     const { data, error } = await q.order("at", { ascending: false }).limit(200);
