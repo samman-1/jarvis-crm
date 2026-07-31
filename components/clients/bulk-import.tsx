@@ -37,11 +37,11 @@ Hala Beauty - sent the profile on whatsapp, waiting
 Gulf Fresh Markets, Suwaidi - just spotted them, haven't gone in yet`;
 
 const ACTIVITY_EXAMPLE = `Sunday
-- Areej Perfumes, walked in, owner not there
-- Called Barakah about the scoping document
+- 09:20 Areej Perfumes, walked in, owner not there
+- 11:00 Called Barakah about the scoping document
 
 Tuesday
-- Nakheel Dental, meeting with Dr Reem, she wants a pilot
+- 10:30 Nakheel Dental, meeting with Dr Reem, she wants a pilot
 - Sent Noor Academy the proposal`;
 
 /**
@@ -400,7 +400,7 @@ export function BulkImport({ locale }: { locale: Locale }) {
                   <p className="min-w-0 flex-1 text-sm">{row.summary}</p>
                 </div>
 
-                <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                <div className="mt-2 grid gap-2 sm:grid-cols-4">
                   <Select
                     value={row.clientId}
                     onChange={(e) =>
@@ -448,6 +448,18 @@ export function BulkImport({ locale }: { locale: Locale }) {
                       )
                     }
                     className="h-10 text-xs"
+                    dir="ltr"
+                  />
+                  <Input
+                    type="time"
+                    value={row.time}
+                    onChange={(e) =>
+                      setActivityRows((rows) =>
+                        rows!.map((r, j) => (j === i ? { ...r, time: e.target.value } : r)),
+                      )
+                    }
+                    aria-label={m.actions.timeOfDay}
+                    className="h-10 text-center text-xs"
                     dir="ltr"
                   />
                 </div>

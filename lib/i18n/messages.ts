@@ -322,6 +322,7 @@ const en = {
     hideCompleted: "Hide completed",
 
     quickLog: "Log what you did",
+    timeOfDay: "Time",
     quickLogHint: "Visited someone? Add it here without opening the client.",
     pickClient: "Which client?",
     logIt: "Log it",
@@ -381,6 +382,10 @@ const en = {
   },
   routes: {
     title: "Routes",
+    todayTitle: "Today's route",
+    nextTitle: "Next route",
+    noneToday: "No route planned. Plan one for your next field day.",
+    planOne: "Plan a route",
     subtitle: "Plan the day before you leave. Works with or without a map.",
     planADay: "Plan a day",
     planHint: "Pick the date, then add the companies you intend to visit.",
@@ -436,6 +441,10 @@ const en = {
     thisWeek: "This week",
     lastWeek: "Last week",
     teamHours: "Everyone's hours",
+    off: "Hours are switched off",
+    offBody:
+      "Start and finish times are paused along with the score. Instead, every visit you log now carries the time it happened — so your day builds itself from real work.",
+    at: "at",
   },
   stages: {
     lead: "Lead",
@@ -759,6 +768,7 @@ const ar: Messages = {
     hideCompleted: "إخفاء المنجزة",
 
     quickLog: "سجّل ما قمت به",
+    timeOfDay: "الوقت",
     quickLogHint: "زرت أحداً؟ سجّلها هنا دون فتح صفحة العميل.",
     pickClient: "أي عميل؟",
     logIt: "تسجيل",
@@ -818,6 +828,10 @@ const ar: Messages = {
   },
   routes: {
     title: "المسارات",
+    todayTitle: "مسار اليوم",
+    nextTitle: "المسار القادم",
+    noneToday: "لا يوجد مسار. خطّط ليومك الميداني القادم.",
+    planOne: "تخطيط مسار",
     subtitle: "خطّط ليومك قبل أن تخرج. تعمل مع أو بدون خريطة.",
     planADay: "خطّط يوماً",
     planHint: "اختر التاريخ ثم أضف الشركات التي تنوي زيارتها.",
@@ -873,6 +887,10 @@ const ar: Messages = {
     thisWeek: "هذا الأسبوع",
     lastWeek: "الأسبوع الماضي",
     teamHours: "ساعات الفريق",
+    off: "تسجيل الساعات متوقف",
+    offBody:
+      "أوقات البداية والنهاية متوقفة مع التقييم. بدلاً من ذلك، كل زيارة تسجّلها تحمل وقت حدوثها — فيتكوّن يومك من العمل الفعلي.",
+    at: "الساعة",
   },
   stages: {
     lead: "عميل محتمل",

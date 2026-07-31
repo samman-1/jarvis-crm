@@ -24,11 +24,18 @@ import {
 } from "@/components/ui/badges";
 import { PageHeader } from "@/components/shell/page-header";
 import { HoursGrid } from "@/components/attendance/hours-grid";
+import { RouteToday } from "@/components/routes/route-today";
+import { RemindersPanel } from "@/components/reminders/reminders";
 import { ComingSoon } from "@/components/ui/coming-soon";
 import { ReminderBanner } from "@/components/reminders/reminders";
 import { TaskPanel } from "@/components/tasks/task-panel";
 import { QuickLog } from "@/components/clients/quick-log";
-import { EFFICIENCY_ENABLED, breakdownBars, scoreBand } from "@/lib/efficiency";
+import {
+  EFFICIENCY_ENABLED,
+  HOURS_ENABLED,
+  breakdownBars,
+  scoreBand,
+} from "@/lib/efficiency";
 import { rangeFor } from "@/lib/dates";
 import { formatDateTime, formatTime, relativeDays } from "@/lib/dates";
 import { formatMinutes, cn } from "@/lib/utils";
@@ -128,11 +135,15 @@ export function Dashboard({ locale }: { locale: Locale }) {
             value={s.won}
             accent={s.won > 0 ? "var(--success)" : undefined}
           />
-          <Stat
-            label={m.dashboard.hours}
-            value={formatMinutes(s.minutesWorked)}
-            sub={`${formatMinutes(s.minutesPlanned)} ${m.dashboard.ofTarget}`}
-          />
+          {HOURS_ENABLED ? (
+            <Stat
+              label={m.dashboard.hours}
+              value={formatMinutes(s.minutesWorked)}
+              sub={`${formatMinutes(s.minutesPlanned)} ${m.dashboard.ofTarget}`}
+            />
+          ) : (
+            <Stat label={m.team.activity} value={s.interactions} />
+          )}
         </div>
       )}
 
@@ -211,14 +222,11 @@ export function Dashboard({ locale }: { locale: Locale }) {
 
         {/* --- Right rail -------------------------------------------- */}
         <div className="space-y-4">
-          {/* Filling in hours is the most frequent thing anyone does here,
-              so it sits on the landing page rather than a page away. */}
-          <HoursGrid
-            locale={locale}
-            onSaved={() => {
-              stats.reload();
-            }}
-          />
+          {/* The whole day on one screen: where you are going, what you owe
+              yourself, who is warm. Nothing here needs another page. */}
+          <RouteToday locale={locale} />
+
+          <RemindersPanel locale={locale} clients={allClients.data ?? []} />
 
           <Card>
             <CardHeader
@@ -327,7 +335,10 @@ export function Dashboard({ locale }: { locale: Locale }) {
             )}
           </Card>
           ) : (
-            <ComingSoon />
+            <>
+              <ComingSoon />
+              <ComingSoon title={m.hours.title} note={m.hours.offBody} />
+            </>
           )}
 
         </div>

@@ -39,7 +39,7 @@ import {
 } from "@/lib/config/stages";
 import { PUBLIC_MEMBERS } from "@/lib/config/members";
 import type { Locale } from "@/lib/i18n/config";
-import { formatDate, formatDateTime, relativeDays } from "@/lib/dates";
+import { formatDate, formatDateTime, relativeDays, toDateKey } from "@/lib/dates";
 import { cn, formatSar } from "@/lib/utils";
 
 export function ClientDetail({
@@ -545,6 +545,11 @@ function LogInteraction({
   const [outcome, setOutcome] = useState("");
   const [newStage, setNewStage] = useState<Stage | "">("");
   const [duration, setDuration] = useState("");
+  const [when, setWhen] = useState(toDateKey(new Date()));
+  const [atTime, setAtTime] = useState(() => {
+    const d = new Date();
+    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  });
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -560,6 +565,7 @@ function LogInteraction({
         summary: summary.trim(),
         outcome: outcome.trim(),
         durationMin: duration ? Number(duration) : null,
+        happenedAt: new Date(`${when}T${atTime || "12:00"}:00`).toISOString(),
         newStage: newStage || undefined,
       });
       setSummary("");
@@ -614,6 +620,27 @@ function LogInteraction({
           placeholder={m.client.logPlaceholder}
           className="min-h-20"
         />
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label={m.common.date}>
+            <Input
+              type="date"
+              value={when}
+              onChange={(e) => setWhen(e.target.value)}
+              className="h-10 text-xs"
+              dir="ltr"
+            />
+          </Field>
+          <Field label={m.actions.timeOfDay}>
+            <Input
+              type="time"
+              value={atTime}
+              onChange={(e) => setAtTime(e.target.value)}
+              className="h-10 text-center text-xs"
+              dir="ltr"
+            />
+          </Field>
+        </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
           <Field label={m.client.logOutcome}>

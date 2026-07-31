@@ -431,6 +431,8 @@ export interface ParsedActivityRow {
   summary: string;
   /** yyyy-MM-dd */
   date: string;
+  /** "HH:MM", or empty when the line did not say. */
+  time: string;
   include: boolean;
   raw: string;
 }

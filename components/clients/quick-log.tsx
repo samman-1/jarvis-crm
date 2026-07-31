@@ -44,6 +44,12 @@ export function QuickLog({
   const [type, setType] = useState<InteractionType>("visit");
   const [summary, setSummary] = useState("");
   const [when, setWhen] = useState(toDateKey(new Date()));
+  // Defaults to now, because most entries are made minutes after the visit —
+  // but editable, because plenty are typed up in the evening.
+  const [atTime, setAtTime] = useState(() => {
+    const d = new Date();
+    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  });
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -54,14 +60,12 @@ export function QuickLog({
     if (!clientId || !summary.trim()) return;
     setBusy(true);
     try {
-      // Midday on the chosen date, so it lands on the right day regardless
-      // of when it was actually typed.
       await db().logInteraction({
         clientId,
         memberId: user.id,
         type,
         summary: summary.trim(),
-        happenedAt: new Date(`${when}T12:00:00`).toISOString(),
+        happenedAt: new Date(`${when}T${atTime || "12:00"}:00`).toISOString(),
       });
       setSummary("");
       setClientId("");
@@ -141,14 +145,24 @@ export function QuickLog({
             className="min-h-20"
           />
 
-          <Input
-            type="date"
-            value={when}
-            onChange={(e) => setWhen(e.target.value)}
-            aria-label={m.actions.dueDate}
-            className="h-11"
-            dir="ltr"
-          />
+          <div className="grid grid-cols-2 gap-2">
+            <Input
+              type="date"
+              value={when}
+              onChange={(e) => setWhen(e.target.value)}
+              aria-label={m.common.date}
+              className="h-11"
+              dir="ltr"
+            />
+            <Input
+              type="time"
+              value={atTime}
+              onChange={(e) => setAtTime(e.target.value)}
+              aria-label={m.actions.timeOfDay}
+              className="h-11 text-center"
+              dir="ltr"
+            />
+          </div>
 
           <Button
             type="submit"

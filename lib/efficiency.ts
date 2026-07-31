@@ -32,6 +32,17 @@ import { fromDateKey } from "@/lib/dates";
  */
 export const EFFICIENCY_ENABLED = false;
 
+/**
+ * The weekly timesheet is off too.
+ *
+ * It only ever existed to feed the score, and asking people to type start and
+ * finish times for a number nobody is using is pure friction. What replaces it
+ * is better anyway: every visit, call and message now carries the time it
+ * happened, so the day reconstructs itself from real work instead of from two
+ * numbers typed at the end of it.
+ */
+export const HOURS_ENABLED = false;
+
 export const WEIGHTS = {
   /** Did you actually cover the 09:00–14:00 window on the three field days? */
   attendance: 30,

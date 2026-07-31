@@ -1227,7 +1227,7 @@ export class MockProvider implements DataProvider {
         memberId,
         type: row.type,
         summary: row.summary.trim(),
-        happenedAt: new Date(`${row.date}T12:00:00`).toISOString(),
+        happenedAt: new Date(`${row.date}T${row.time || "12:00"}:00`).toISOString(),
       });
       created++;
     }

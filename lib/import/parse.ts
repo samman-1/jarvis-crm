@@ -72,6 +72,21 @@ const PHONE_RE = /(?:\+?966|00966|0)?5\d{1}[\s-]?\d{3}[\s-]?\d{4}/;
 
 const MONEY_RE = /(?:sar|sr|ريال|﷼)?\s*([0-9][0-9,\.]{2,})\s*(?:sar|sr|ريال|k)?/i;
 
+/** "10:30", "10.30am", "at 9" — the time somebody actually went. */
+const TIME_RE = /(?:at\s*)?([01]?\d|2[0-3])[:.]([0-5]\d)\s*(am|pm)?|(?:at\s*)(1?\d)\s*(am|pm)/i;
+
+function readTime(line: string): string {
+  const match = line.match(TIME_RE);
+  if (!match) return "";
+  let hour = Number(match[1] ?? match[4]);
+  const minute = Number(match[2] ?? 0);
+  const suffix = (match[3] ?? match[5] ?? "").toLowerCase();
+  if (suffix === "pm" && hour < 12) hour += 12;
+  if (suffix === "am" && hour === 12) hour = 0;
+  if (!Number.isFinite(hour) || hour > 23) return "";
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
 function has(haystack: string, words: string[]): boolean {
   const h = haystack.toLowerCase();
   return words.some((w) => h.includes(w));
@@ -330,6 +345,9 @@ export function parseActivity(
       type: guessType(stripped),
       summary: stripped,
       date: inlineDate,
+      // Blank when the line carries no time — the table shows an empty field
+      // rather than inventing one.
+      time: readTime(stripped),
       include: true,
       raw: line,
     });

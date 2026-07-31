@@ -17,6 +17,7 @@ import { MemberBadge } from "@/components/ui/badges";
 import { HoursGrid } from "@/components/attendance/hours-grid";
 import { DayCalendar } from "@/components/calendar/day-calendar";
 import { PageHeader } from "@/components/shell/page-header";
+import { ComingSoon } from "@/components/ui/coming-soon";
 import { PUBLIC_MEMBERS } from "@/lib/config/members";
 import {
   CONDITIONAL_DAYS,
@@ -28,6 +29,7 @@ import {
 } from "@/lib/config/schedule";
 import {
   EFFICIENCY_ENABLED,
+  HOURS_ENABLED,
   scoreBand,
   wedThuRecommendation,
 } from "@/lib/efficiency";
@@ -51,6 +53,8 @@ export function CalendarView({ locale }: { locale: Locale }) {
   const mounted = useMounted();
 
   const [tab, setTab] = useState<"days" | "schedule">("days");
+  // With the timesheet off there is only one thing on this page.
+  const showTabs = HOURS_ENABLED;
   const [monthOffset, setMonthOffset] = useState(0);
 
   const month = useMemo(
@@ -151,7 +155,7 @@ export function CalendarView({ locale }: { locale: Locale }) {
 
       {/* Two jobs on one page: browsing what was done, and filling in the
           week. They are separated so neither buries the other. */}
-      <div className="flex overflow-hidden rounded-md border border-border">
+      <div className={cn("overflow-hidden rounded-md border border-border", showTabs ? "flex" : "hidden")}>
         {(["days", "schedule"] as const).map((v) => (
           <button
             key={v}
@@ -167,9 +171,13 @@ export function CalendarView({ locale }: { locale: Locale }) {
         ))}
       </div>
 
-      {tab === "days" ? <DayCalendar locale={locale} /> : null}
+      {!showTabs || tab === "days" ? <DayCalendar locale={locale} /> : null}
 
-      <div className={cn("space-y-5", tab !== "schedule" && "hidden")}>
+      {!HOURS_ENABLED ? (
+        <ComingSoon title={m.hours.title} note={m.hours.offBody} />
+      ) : null}
+
+      <div className={cn("space-y-5", (!showTabs || tab !== "schedule") && "hidden")}>
       <HoursGrid
         locale={locale}
         onSaved={() => {
