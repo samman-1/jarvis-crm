@@ -260,7 +260,7 @@ export function TeamView({ locale }: { locale: Locale }) {
                       <StatusChip status={c.status} compact />
                       <FreshnessChip days={c.daysSinceContact} stale={c.isStale} />
                       <span className="tnum w-20 text-end text-xs text-muted">
-                        {c.dealValueSar ? formatSar(c.dealValueSar) : "—"}
+                        {c.dealValueSar ? formatSar(c.dealValueSar) : ""}
                       </span>
                     </Link>
                   </li>
@@ -322,7 +322,7 @@ function ActivityStrip({
             title={`${new Intl.DateTimeFormat(locale === "ar" ? "ar-SA" : "en-GB", {
               day: "numeric",
               month: "short",
-            }).format(new Date(`${d.date}T00:00:00`))} — ${d.count}`}
+            }).format(new Date(`${d.date}T00:00:00`))}: ${d.count}`}
           >
             <span
               className="w-full rounded-sm transition-colors"

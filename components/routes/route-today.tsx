@@ -134,7 +134,7 @@ export function RouteToday({ locale }: { locale: Locale }) {
                       ? locale === "ar" && client.nameAr
                         ? client.nameAr
                         : client.name
-                      : "—"}
+                      : ""}
                   </Link>
                   {client?.city ? (
                     <span className="shrink-0 text-[11px] text-faint">

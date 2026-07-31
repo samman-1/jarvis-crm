@@ -9,7 +9,7 @@ import {
   Button,
   Card,
   CardHeader,
-  Divider,
+  Input,
 } from "@/components/ui/primitives";
 import { LocaleSwitch } from "@/components/shell/locale-switch";
 import { PageHeader } from "@/components/shell/page-header";
@@ -53,28 +53,9 @@ export function SettingsView({ locale }: { locale: Locale }) {
     }
   }
 
-  async function reset() {
-    if (!window.confirm(m.settings.resetConfirm)) return;
-    setBusy("reset");
-    try {
-      await db().resetToSeed();
-      window.location.reload();
-    } finally {
-      setBusy("");
-    }
-  }
-
   return (
     <div className="mx-auto max-w-3xl space-y-5">
       <PageHeader title={m.settings.title} />
-
-      {/* --- The honest notice about Phase A --------------------------- */}
-      <div className="rounded-lg border border-warn bg-warn-soft p-4">
-        <div className="mb-1 text-[11px] font-semibold tracking-wide text-warn uppercase">
-          {m.settings.phaseNotice}
-        </div>
-        <p className="text-sm leading-relaxed">{m.settings.phaseNoticeBody}</p>
-      </div>
 
       <ProfileEditor locale={locale} />
 
@@ -113,12 +94,7 @@ export function SettingsView({ locale }: { locale: Locale }) {
         </div>
       </Card>
 
-      <Card>
-        <CardHeader title={m.settings.password} />
-        <p className="text-sm leading-relaxed text-muted">
-          {m.settings.passwordPending}
-        </p>
-      </Card>
+      <PasswordCard />
 
       <Card>
         <CardHeader title={m.settings.data} hint={m.settings.dataHint} />
@@ -150,15 +126,6 @@ export function SettingsView({ locale }: { locale: Locale }) {
               if (file) void importData(file);
             }}
           />
-
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={reset}
-            disabled={busy !== ""}
-          >
-            {busy === "reset" ? m.common.saving : m.settings.reset}
-          </Button>
         </div>
       </Card>
 
@@ -207,6 +174,114 @@ export function SettingsView({ locale }: { locale: Locale }) {
         </div>
       </Card>
     </div>
+  );
+}
+
+/**
+ * Change your own password.
+ *
+ * Everyone started on a password Sammoni generated and sent over WhatsApp,
+ * which means it was never really private. Setting one here replaces it with
+ * a hash only you can satisfy.
+ */
+function PasswordCard() {
+  const { m } = useI18n();
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [repeat, setRepeat] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [done, setDone] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setDone(false);
+
+    if (next.length < 8) return setError(m.settings.passwordShort);
+    if (next !== repeat) return setError(m.settings.passwordMismatch);
+
+    setBusy(true);
+    try {
+      const res = await fetch("/api/auth/password", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ current, next }),
+      });
+      if (res.ok) {
+        setCurrent("");
+        setNext("");
+        setRepeat("");
+        setDone(true);
+        return;
+      }
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      setError(
+        body.error === "wrong_password"
+          ? m.settings.passwordWrong
+          : body.error === "too_short"
+            ? m.settings.passwordShort
+            : body.error === "not_saved"
+              ? m.settings.passwordNotSaved
+              : m.common.error,
+      );
+    } catch {
+      setError(m.common.error);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader title={m.settings.password} hint={m.settings.passwordHint} />
+      <form onSubmit={submit} className="space-y-3">
+        <Input
+          type="password"
+          autoComplete="current-password"
+          value={current}
+          onChange={(e) => setCurrent(e.target.value)}
+          placeholder={m.settings.currentPassword}
+          aria-label={m.settings.currentPassword}
+          className="h-11"
+        />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Input
+            type="password"
+            autoComplete="new-password"
+            value={next}
+            onChange={(e) => setNext(e.target.value)}
+            placeholder={m.settings.newPassword}
+            aria-label={m.settings.newPassword}
+            className="h-11"
+          />
+          <Input
+            type="password"
+            autoComplete="new-password"
+            value={repeat}
+            onChange={(e) => setRepeat(e.target.value)}
+            placeholder={m.settings.repeatPassword}
+            aria-label={m.settings.repeatPassword}
+            className="h-11"
+          />
+        </div>
+
+        {error ? (
+          <p className="text-sm text-critical">{error}</p>
+        ) : done ? (
+          <p className="text-sm text-success">{m.settings.passwordChanged}</p>
+        ) : null}
+
+        <Button
+          type="submit"
+          variant="primary"
+          size="sm"
+          disabled={busy || !current || !next || !repeat}
+        >
+          {busy ? m.common.saving : m.settings.changePassword}
+        </Button>
+      </form>
+    </Card>
   );
 }
 

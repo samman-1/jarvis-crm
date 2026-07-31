@@ -11,7 +11,7 @@ import { BRAND } from "@/lib/config/brand";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: `${BRAND.name} — ${BRAND.tagline}`,
+    name: `${BRAND.name} · ${BRAND.tagline}`,
     short_name: BRAND.name,
     description: `${BRAND.company} internal client and team tracking.`,
     start_url: "/en/dashboard",

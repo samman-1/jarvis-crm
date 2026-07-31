@@ -88,20 +88,22 @@ export function Dashboard({ locale }: { locale: Locale }) {
 
   const s = stats.data;
 
-  /* The six clients worth looking at right now: still in play, most
-     recently worked, with anything overdue for contact floated up. */
-  const topSix = useMemo<ClientRow[]>(() => {
-    const rows = (clients.data ?? []).filter(
-      (c) => c.status === "active" || c.status === "on_hold",
-    );
-    return [...rows]
-      .sort((a, b) => {
-        if (a.isStale !== b.isStale) return a.isStale ? -1 : 1;
-        return (b.interactionCount ?? 0) - (a.interactionCount ?? 0);
-      })
-      .slice(0, 6);
+  /* Your own book, still in play, with anything going cold floated to the
+     top. This is the list you scan before deciding where to drive. */
+  const mine = useMemo<ClientRow[]>(() => {
+    const rows = (clients.data ?? []).filter((c) => c.status !== "dead");
+    return [...rows].sort((a, b) => {
+      if (a.isStale !== b.isStale) return a.isStale ? -1 : 1;
+      return (b.interactionCount ?? 0) - (a.interactionCount ?? 0);
+    });
   }, [clients.data]);
 
+  /* The subset that has actually gone quiet. Kept separate from the list
+     above so it reads as a to-do, not as a second copy of the same names. */
+  const goingCold = useMemo(
+    () => mine.filter((c) => c.isStale && c.status === "active"),
+    [mine],
+  );
 
   return (
     <div className="space-y-5">
@@ -160,6 +162,96 @@ export function Dashboard({ locale }: { locale: Locale }) {
               allClients.reload();
             }}
           />
+
+          {/* Your own clients, on the page you land on. Previously this
+              lived one tap away and the home page could show an empty week
+              while six companies sat waiting. */}
+          <Card>
+            <CardHeader
+              title={m.dashboard.myClients}
+              hint={m.dashboard.myClientsHint}
+              action={
+                <div className="flex items-center gap-2">
+                  {mine.length > 0 ? (
+                    <span className="tnum text-xs text-faint">
+                      {mine.length}
+                    </span>
+                  ) : null}
+                  <Link href={`/${locale}/clients`}>
+                    <Button size="sm" variant="secondary">
+                      {m.dashboard.seeAll}
+                    </Button>
+                  </Link>
+                </div>
+              }
+            />
+            {clients.loading ? (
+              <Skeleton className="h-40" />
+            ) : mine.length === 0 ? (
+              <EmptyState
+                title={m.dashboard.noClientsYet}
+                hint={m.clients.mineSubtitle}
+                action={
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <Link href={`/${locale}/clients/new`}>
+                      <Button size="sm" variant="primary">
+                        {m.nav.newClient}
+                      </Button>
+                    </Link>
+                    <Link href={`/${locale}/clients/import`}>
+                      <Button size="sm" variant="secondary">
+                        {m.nav.import}
+                      </Button>
+                    </Link>
+                  </div>
+                }
+              />
+            ) : (
+              <ul className="divide-y divide-border">
+                {mine.slice(0, 8).map((c) => (
+                  <li key={c.id}>
+                    <Link
+                      href={`/${locale}/clients/${c.id}`}
+                      className="-mx-2 flex items-center gap-3 rounded-md px-2 py-2.5 transition-colors hover:bg-surface-2"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-medium">
+                          {locale === "ar" && c.nameAr ? c.nameAr : c.name}
+                        </div>
+                        <div className="mt-1 flex items-center gap-2">
+                          <StageChip stage={c.stage} />
+                          {c.city ? (
+                            <span className="truncate text-[11px] text-faint">
+                              {c.city}
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <FreshnessChip
+                          days={c.daysSinceContact}
+                          stale={c.isStale}
+                        />
+                        {c.nextAction ? (
+                          <span className="max-w-32 truncate text-[11px] text-faint">
+                            {c.nextAction}
+                          </span>
+                        ) : null}
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {mine.length > 8 ? (
+              <Link
+                href={`/${locale}/clients`}
+                className="mt-3 block text-center text-xs text-muted transition-colors hover:text-accent"
+              >
+                {m.dashboard.seeAll} ({mine.length})
+              </Link>
+            ) : null}
+          </Card>
 
           <Card>
             <CardHeader title={m.dashboard.timeline} hint={m.dashboard.thisWeek} />
@@ -230,25 +322,16 @@ export function Dashboard({ locale }: { locale: Locale }) {
 
           <Card>
             <CardHeader
-              title={m.dashboard.topClients}
-              hint={m.dashboard.topClientsHint}
+              title={m.dashboard.needsAttention}
+              hint={m.dashboard.needsAttentionHint}
             />
             {clients.loading ? (
-              <Skeleton className="h-48" />
-            ) : topSix.length === 0 ? (
-              <EmptyState
-                title={m.common.empty}
-                action={
-                  <Link href={`/${locale}/clients/new`}>
-                    <Button size="sm" variant="primary">
-                      {m.clients.addFirst}
-                    </Button>
-                  </Link>
-                }
-              />
+              <Skeleton className="h-24" />
+            ) : goingCold.length === 0 ? (
+              <p className="text-xs text-faint">{m.dashboard.allWarm}</p>
             ) : (
               <ul className="space-y-2">
-                {topSix.map((c) => (
+                {goingCold.slice(0, 6).map((c) => (
                   <li key={c.id}>
                     <Link
                       href={`/${locale}/clients/${c.id}`}

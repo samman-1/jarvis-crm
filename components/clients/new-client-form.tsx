@@ -24,8 +24,8 @@ import type { Locale } from "@/lib/i18n/config";
 const SOURCES = [
   "Cold walk-in",
   "Referral",
-  "Inbound — website",
-  "Inbound — Instagram",
+  "Inbound (website)",
+  "Inbound (Instagram)",
   "Cold call",
   "Event",
   "Personal contact",

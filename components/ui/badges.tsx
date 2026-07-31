@@ -63,7 +63,7 @@ export function MemberBadge({
 }) {
   const { locale } = useI18n();
   const member = PUBLIC_MEMBERS.find((m) => m.id === memberId);
-  if (!member) return <span className="text-xs text-faint">—</span>;
+  if (!member) return null;
 
   const dims = {
     xs: "size-5 text-[9px]",

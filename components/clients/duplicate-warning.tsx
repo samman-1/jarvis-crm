@@ -68,7 +68,7 @@ function MatchCard({
   const closer = PUBLIC_MEMBERS.find((p) => p.id === client.closedById) ?? owner;
   const ownerName = owner
     ? (locale === "ar" ? owner.nameAr : owner.name)
-    : "—";
+    : "";
 
   /* ---------------- Dead: the hard stop ---------------- */
   if (match.level === "block") {
@@ -98,7 +98,7 @@ function MatchCard({
               <span className="font-semibold text-fg">
                 {closer
                   ? (locale === "ar" ? closer.nameAr : closer.name)
-                  : "—"}
+                  : ""}
               </span>{" "}
               {m.duplicate.deadOn}{" "}
               <span className="font-semibold text-fg">

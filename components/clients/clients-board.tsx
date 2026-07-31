@@ -361,7 +361,7 @@ function ClientTable({ rows, locale }: { rows: ClientRow[]; locale: Locale }) {
                       dead ? "text-faint" : "text-muted",
                     )}
                   >
-                    {c.nextAction || "—"}
+                    {c.nextAction || ""}
                   </span>
                 </td>
                 <td className="tnum px-4 py-3 text-end text-xs">
@@ -370,9 +370,7 @@ function ClientTable({ rows, locale }: { rows: ClientRow[]; locale: Locale }) {
                       {formatSar(c.dealValueSar)}
                       <span className="ms-1 text-faint">{m.common.sar}</span>
                     </span>
-                  ) : (
-                    <span className="text-faint">—</span>
-                  )}
+                  ) : null}
                 </td>
               </tr>
             );

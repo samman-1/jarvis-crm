@@ -149,7 +149,7 @@ function RouteCard({
 
   const nameOf = (id: string) => {
     const c = byId.get(id);
-    if (!c) return "—";
+    if (!c) return "";
     return locale === "ar" && c.nameAr ? c.nameAr : c.name;
   };
 
@@ -382,7 +382,7 @@ function RouteCard({
             {available.map((c) => (
               <option key={c.id} value={c.id}>
                 {locale === "ar" && c.nameAr ? c.nameAr : c.name}
-                {c.city ? ` — ${c.city}` : ""}
+                {c.city ? `, ${c.city}` : ""}
               </option>
             ))}
           </Select>
@@ -409,7 +409,7 @@ function RouteCard({
                 const text = route.stops
                   .map((s, i) => `${i + 1}. ${nameOf(s.clientId)}${
                     byId.get(s.clientId)?.city
-                      ? ` — ${byId.get(s.clientId)!.city}`
+                      ? `, ${byId.get(s.clientId)!.city}`
                       : ""
                   }${s.note ? ` (${s.note})` : ""}`)
                   .join("\n");

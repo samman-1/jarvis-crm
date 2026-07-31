@@ -258,7 +258,7 @@ export function BulkImport({ locale }: { locale: Locale }) {
                         return p ? (locale === "ar" ? p.nameAr : p.name) : "";
                       })()}
                     </strong>
-                    {row.duplicateOf.status !== "dead" ? ` — ${m.importer.dupJoin}` : ""}
+                    {row.duplicateOf.status !== "dead" ? `, ${m.importer.dupJoin}` : ""}
                   </p>
                 ) : null}
 
@@ -414,7 +414,7 @@ export function BulkImport({ locale }: { locale: Locale }) {
                   >
                     <option value="">
                       {m.importer.whichClient}
-                      {row.clientGuess ? ` — "${row.clientGuess}"?` : ""}
+                      {row.clientGuess ? `: "${row.clientGuess}"?` : ""}
                     </option>
                     {clients.map((c) => (
                       <option key={c.id} value={c.id}>

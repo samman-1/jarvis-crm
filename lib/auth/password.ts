@@ -1,19 +1,32 @@
 import { timingSafeEqual } from "node:crypto";
 import type { MemberConfig } from "@/lib/config/members";
+import { matchesHash, readPasswordHash } from "@/lib/auth/store";
 
 /**
- * Password checking. Node runtime only — never import this from proxy.ts.
+ * Password checking. Node runtime only, never import this from proxy.ts.
  *
- * Passwords live ONLY in the environment: JARVIS_PASSWORD_1 / _2 / _3, set in
- * Vercel and in .env.local for development. Nothing is stored in the
- * repository, because the repository is public.
+ * Two sources, in order:
  *
- * This fails closed: if a member's variable is missing, that member cannot
- * sign in. An unconfigured deployment locks everyone out rather than falling
- * back to something guessable.
+ *   1. The hash the member set for themselves, in the database. Once this
+ *      exists it is the only thing that works, so changing your password
+ *      really does retire the one you were handed.
+ *   2. JARVIS_PASSWORD_1 / _2 / _3 from the environment, for anyone who has
+ *      not set their own yet.
+ *
+ * Nothing is stored in the repository, because the repository is public.
+ *
+ * This fails closed: with no stored hash and no environment variable, that
+ * member cannot sign in. An unconfigured deployment locks everyone out rather
+ * than falling back to something guessable.
  */
-export function verifyPassword(member: MemberConfig, attempt: string): boolean {
+export async function verifyPassword(
+  member: MemberConfig,
+  attempt: string,
+): Promise<boolean> {
   if (!attempt) return false;
+
+  const stored = await readPasswordHash(member.id);
+  if (stored) return matchesHash(attempt, stored);
 
   const expected = process.env[member.passwordEnvVar];
   if (!expected) return false;

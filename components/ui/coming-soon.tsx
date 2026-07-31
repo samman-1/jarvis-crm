@@ -25,7 +25,7 @@ export function ComingSoon({
       <div className="flex items-center gap-2.5 rounded-md border border-dashed border-border px-3 py-2.5">
         <span className="size-2 shrink-0 rounded-full bg-faint" aria-hidden />
         <span className="text-xs text-faint">
-          {title ?? m.dashboard.efficiency} — {m.common.comingSoon}
+          {title ?? m.dashboard.efficiency} · {m.common.comingSoon}
         </span>
       </div>
     );

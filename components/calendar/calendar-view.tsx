@@ -289,7 +289,7 @@ export function CalendarView({ locale }: { locale: Locale }) {
                         >
                           <span className="font-semibold">{member?.initials}</span>
                           <span className="tnum truncate">
-                            {a.checkInAt ? formatTime(a.checkInAt) : "—"}
+                            {a.checkInAt ? formatTime(a.checkInAt) : ""}
                           </span>
                         </div>
                       );
@@ -557,9 +557,7 @@ function WeekDetail({ locale }: { locale: Locale }) {
                   const record = rows.find((r) => r.date === dateKey);
                   return (
                     <td key={d.key} className="py-2.5 text-center">
-                      {!record ? (
-                        <span className="text-xs text-faint">—</span>
-                      ) : (
+                      {!record ? null : (
                         <span
                           className="tnum inline-flex flex-col rounded-md px-2 py-1 text-[11px]"
                           style={{
@@ -569,7 +567,7 @@ function WeekDetail({ locale }: { locale: Locale }) {
                           title={record.reason}
                         >
                           <span>
-                            {record.checkInAt ? formatTime(record.checkInAt) : "—"}
+                            {record.checkInAt ? formatTime(record.checkInAt) : ""}
                             {record.checkOutAt
                               ? ` → ${formatTime(record.checkOutAt)}`
                               : ""}

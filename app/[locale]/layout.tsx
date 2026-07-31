@@ -40,7 +40,7 @@ const arabic = IBM_Plex_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: "Jarvis — Internal CRM",
+  title: "Jarvis CRM",
   description:
     "Jarvis AI Agency internal client and team tracking system. Private.",
   robots: { index: false, follow: false },

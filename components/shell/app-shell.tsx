@@ -206,13 +206,6 @@ export function AppShell({
 
         <footer className="hidden px-6 pb-6 text-center text-[11px] text-faint lg:block">
           {m.brand.agency}
-          <span className="mx-2">·</span>
-          <Link
-            href={`/${locale}/settings`}
-            className="underline-offset-2 hover:underline"
-          >
-            {m.settings.phaseNotice}
-          </Link>
         </footer>
       </div>
 

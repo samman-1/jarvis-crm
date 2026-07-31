@@ -141,7 +141,7 @@ export function ClientDetail({
               <span className="font-semibold text-fg">
                 {closer
                   ? (locale === "ar" ? closer.nameAr : closer.name)
-                  : "—"}
+                  : ""}
               </span>{" "}
               · {formatDate(client.closedAt, locale)}
             </p>
@@ -373,7 +373,7 @@ function Detail({
       <div className="text-[11px] tracking-wide text-muted uppercase">
         {label}
       </div>
-      <div className="mt-0.5 text-sm">{value || "—"}</div>
+      <div className="mt-0.5 text-sm">{value || ""}</div>
     </div>
   );
 }

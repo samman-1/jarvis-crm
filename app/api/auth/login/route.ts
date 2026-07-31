@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "unknown_member" }, { status: 400 });
   }
 
-  if (!verifyPassword(member, body.password ?? "")) {
+  if (!(await verifyPassword(member, body.password ?? ""))) {
     // Deliberately slow the failure path a little so the login tile cannot be
     // hammered at full speed from a script.
     await new Promise((r) => setTimeout(r, 400));

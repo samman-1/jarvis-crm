@@ -45,7 +45,6 @@ export function ChatView({ locale }: { locale: Locale }) {
     [mounted, user.id, withId],
   );
 
-  const isLocalOnly = mounted && db().mode === "mock";
 
   useEffect(() => {
     if (!mounted) return;
@@ -79,15 +78,6 @@ export function ChatView({ locale }: { locale: Locale }) {
   return (
     <div className="space-y-4">
       <PageHeader title={m.chat.title} subtitle={m.chat.subtitle} />
-
-      {isLocalOnly ? (
-        <div className="rounded-lg border border-warn bg-warn-soft p-3.5">
-          <div className="mb-1 text-[11px] font-semibold tracking-wide text-warn uppercase">
-            {m.chat.notLiveTitle}
-          </div>
-          <p className="text-sm leading-relaxed">{m.chat.notLiveBody}</p>
-        </div>
-      ) : null}
 
       {/* --- Thread picker -------------------------------------------- */}
       <div className="flex gap-2 overflow-x-auto pb-1">
