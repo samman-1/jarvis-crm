@@ -332,6 +332,7 @@ const en = {
     hideCompleted: "Hide completed",
 
     quickLog: "Log what you did",
+    logMany: "Add many",
     timeOfDay: "Time",
     quickLogHint: "Visited someone? Add it here without opening the client.",
     pickClient: "Which client?",
@@ -367,7 +368,10 @@ const en = {
     useExample: "Show me an example",
     checkTitle: "Check before saving",
     willBeSaved: "will be saved",
-    activityHint: "Anything without a client picked will be skipped.",
+    activityHint:
+      "Companies you have not added yet can be created from here. Anything left without a client is skipped.",
+    createNamed: "Add",
+    createAllMissing: "Add the {n} companies that are not in the system yet",
     include: "Include this one",
     whichClient: "Which client?",
     saveAll: "Save all",
@@ -783,6 +787,7 @@ const ar: Messages = {
     hideCompleted: "إخفاء المنجزة",
 
     quickLog: "سجّل ما قمت به",
+    logMany: "أضف دفعة",
     timeOfDay: "الوقت",
     quickLogHint: "زرت أحداً؟ سجّلها هنا دون فتح صفحة العميل.",
     pickClient: "أي عميل؟",
@@ -818,7 +823,10 @@ const ar: Messages = {
     useExample: "أرني مثالاً",
     checkTitle: "راجع قبل الحفظ",
     willBeSaved: "سيتم حفظها",
-    activityHint: "أي سطر بدون عميل محدد سيتم تخطيه.",
+    activityHint:
+      "الشركات غير المضافة يمكن إنشاؤها من هنا. أي سطر يبقى بدون عميل سيتم تخطيه.",
+    createNamed: "أضف",
+    createAllMissing: "أضف {n} شركة غير موجودة في النظام",
     include: "تضمين هذا",
     whichClient: "أي عميل؟",
     saveAll: "حفظ الكل",

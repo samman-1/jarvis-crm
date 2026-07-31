@@ -45,6 +45,12 @@ Tuesday
 - Sent Noor Academy the proposal`;
 
 /**
+ * Chosen in the client dropdown to mean "this company is not in the system
+ * yet, make it". Never reaches the database; it is swapped for a real id.
+ */
+const NEW_CLIENT = "__new__";
+
+/**
  * Paste a whole day — or a whole backlog — in one message.
  *
  * Typing companies in one at a time is what stops people using a CRM at all.
@@ -52,13 +58,20 @@ Tuesday
  * asks for confirmation. Nothing is written until the table is approved, so a
  * bad guess costs a tap rather than a wrong record.
  */
-export function BulkImport({ locale }: { locale: Locale }) {
+export function BulkImport({
+  locale,
+  initialMode = "clients",
+}: {
+  locale: Locale;
+  /** Set from the link you arrived on, so "what I did" opens ready to paste. */
+  initialMode?: Mode;
+}) {
   const { m } = useI18n();
   const { user } = useSession();
   const router = useRouter();
   const mounted = useMounted();
 
-  const [mode, setMode] = useState<Mode>("clients");
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [text, setText] = useState("");
   const [clientRows, setClientRows] = useState<ParsedClientRow[] | null>(null);
   const [activityRows, setActivityRows] = useState<ParsedActivityRow[] | null>(null);
@@ -106,14 +119,56 @@ export function BulkImport({ locale }: { locale: Locale }) {
     }
   }
 
+  /**
+   * Save the day, creating any company that does not exist yet.
+   *
+   * Without this, pasting a week of visits into an empty system saves nothing:
+   * every line needs a client, and every client would have to be typed in by
+   * hand first. Rows marked NEW create the company from the name the parser
+   * read, then log against it, so one paste is genuinely one action.
+   */
   async function saveActivity() {
     if (!activityRows) return;
     setBusy(true);
     try {
-      const out = await db().importActivity(activityRows, user.id);
-      setResult(`${out.created} ${m.importer.logged}`);
+      const rows = [...activityRows];
+      let created = 0;
+
+      // Same company on three lines should become one client, not three.
+      const madeByName = new Map<string, string>();
+      for (const row of rows) {
+        if (row.clientId !== NEW_CLIENT || !row.include) continue;
+        const name = row.clientGuess.trim();
+        if (!name) continue;
+
+        const key = name.toLowerCase();
+        let id = madeByName.get(key);
+        if (!id) {
+          const client = await db().createClient(
+            {
+              name,
+              stage: "contacted",
+              status: "active",
+              ownerId: user.id,
+              broughtById: user.id,
+            },
+            user.id,
+          );
+          id = client.id;
+          madeByName.set(key, id);
+          created++;
+        }
+        row.clientId = id;
+      }
+
+      const out = await db().importActivity(rows, user.id);
+      setResult(
+        `${out.created} ${m.importer.logged}` +
+          (created ? ` · ${created} ${m.importer.added}` : ""),
+      );
       setActivityRows(null);
       setText("");
+      if (created) existing.reload();
     } finally {
       setBusy(false);
     }
@@ -416,6 +471,11 @@ export function BulkImport({ locale }: { locale: Locale }) {
                       {m.importer.whichClient}
                       {row.clientGuess ? `: "${row.clientGuess}"?` : ""}
                     </option>
+                    {row.clientGuess.trim() ? (
+                      <option value={NEW_CLIENT}>
+                        + {m.importer.createNamed} "{row.clientGuess.trim()}"
+                      </option>
+                    ) : null}
                     {clients.map((c) => (
                       <option key={c.id} value={c.id}>
                         {locale === "ar" && c.nameAr ? c.nameAr : c.name}
@@ -466,6 +526,33 @@ export function BulkImport({ locale }: { locale: Locale }) {
               </div>
             ))}
           </div>
+
+          {/* One tap instead of one dropdown per line, which is exactly the
+              per-item work this screen exists to avoid. */}
+          {activityRows.some((r) => !r.clientId && r.clientGuess.trim()) ? (
+            <button
+              type="button"
+              onClick={() =>
+                setActivityRows((rows) =>
+                  rows!.map((r) =>
+                    !r.clientId && r.clientGuess.trim()
+                      ? { ...r, clientId: NEW_CLIENT }
+                      : r,
+                  ),
+                )
+              }
+              className="mt-3 w-full rounded-md border border-dashed border-accent px-3 py-2.5 text-xs font-medium text-accent transition-colors hover:bg-accent-soft"
+            >
+              +{" "}
+              {m.importer.createAllMissing.replace(
+                "{n}",
+                String(
+                  activityRows.filter((r) => !r.clientId && r.clientGuess.trim())
+                    .length,
+                ),
+              )}
+            </button>
+          ) : null}
 
           <div className="mt-4 flex flex-wrap gap-2">
             <Button

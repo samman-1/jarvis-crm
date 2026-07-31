@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useSession } from "@/components/providers/session-provider";
@@ -31,15 +32,20 @@ export function QuickLog({
   clients,
   locale,
   onLogged,
+  open,
+  onOpenChange,
 }: {
   clients: ClientRow[];
   locale: Locale;
   onLogged: () => void;
+  /** Controlled by the page so the empty timeline can open this form too. */
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
   const { m } = useI18n();
   const { user } = useSession();
 
-  const [open, setOpen] = useState(false);
+  const setOpen = (next: boolean) => onOpenChange(next);
   const [clientId, setClientId] = useState("");
   const [type, setType] = useState<InteractionType>("visit");
   const [summary, setSummary] = useState("");
@@ -89,13 +95,22 @@ export function QuickLog({
               ✓ {m.actions.logged}
             </span>
           ) : (
-            <Button
-              size="sm"
-              variant={open ? "ghost" : "primary"}
-              onClick={() => setOpen((v) => !v)}
-            >
-              {open ? m.common.cancel : `+ ${m.dashboard.logInteraction}`}
-            </Button>
+            <div className="flex items-center gap-2">
+              {/* A whole day at once, for anyone catching up on a week of
+                  visits rather than logging the one they just finished. */}
+              <Link href={`/${locale}/clients/import?mode=activity`}>
+                <Button size="sm" variant="secondary">
+                  {m.actions.logMany}
+                </Button>
+              </Link>
+              <Button
+                size="sm"
+                variant={open ? "ghost" : "primary"}
+                onClick={() => setOpen(!open)}
+              >
+                {open ? m.common.cancel : `+ ${m.dashboard.logInteraction}`}
+              </Button>
+            </div>
           )
         }
       />

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useSession } from "@/components/providers/session-provider";
 import { useAsync, useMounted } from "@/lib/hooks/use-async";
@@ -48,6 +48,9 @@ export function Dashboard({ locale }: { locale: Locale }) {
   const mounted = useMounted();
 
   const range = useMemo(() => rangeFor("week"), []);
+  // Held here rather than inside QuickLog so the empty timeline below can
+  // open the same form instead of sending you somewhere else.
+  const [logOpen, setLogOpen] = useState(false);
 
   const stats = useAsync(
     () => (mounted ? db().memberStats(user.id, range) : Promise.resolve(null)),
@@ -155,6 +158,8 @@ export function Dashboard({ locale }: { locale: Locale }) {
           <QuickLog
             clients={allClients.data ?? []}
             locale={locale}
+            open={logOpen}
+            onOpenChange={setLogOpen}
             onLogged={() => {
               recent.reload();
               stats.reload();
@@ -254,19 +259,41 @@ export function Dashboard({ locale }: { locale: Locale }) {
           </Card>
 
           <Card>
-            <CardHeader title={m.dashboard.timeline} hint={m.dashboard.thisWeek} />
+            <CardHeader
+              title={m.dashboard.timeline}
+              hint={m.dashboard.thisWeek}
+              action={
+                <Link href={`/${locale}/clients/import?mode=activity`}>
+                  <Button size="sm" variant="secondary">
+                    {m.actions.logMany}
+                  </Button>
+                </Link>
+              }
+            />
             {recent.loading ? (
               <Skeleton className="h-40" />
             ) : (recent.data ?? []).length === 0 ? (
+              /* This used to offer "All clients", which answered a question
+                 nobody standing here was asking. The two things you actually
+                 want are to log one thing, or to paste the whole week. */
               <EmptyState
                 title={m.dashboard.nothingLogged}
                 hint={m.dashboard.startYourWeek}
                 action={
-                  <Link href={`/${locale}/clients`}>
-                    <Button size="sm" variant="secondary">
-                      {m.clients.title}
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      onClick={() => setLogOpen(true)}
+                    >
+                      + {m.actions.quickLog}
                     </Button>
-                  </Link>
+                    <Link href={`/${locale}/clients/import?mode=activity`}>
+                      <Button size="sm" variant="secondary">
+                        {m.actions.logMany}
+                      </Button>
+                    </Link>
+                  </div>
                 }
               />
             ) : (
