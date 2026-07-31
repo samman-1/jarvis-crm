@@ -43,6 +43,9 @@ const ICONS = {
   calendar: "M7 3v3M17 3v3M3.5 9.5h17M4 6.5h16a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7.5a1 1 0 0 1 1-1Z",
   settings: "M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4M19.4 15a1.6 1.6 0 0 0 .32 1.77l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.6 1.6 0 0 0-1.77-.32 1.6 1.6 0 0 0-1 1.47V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.77.32l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.6 1.6 0 0 0 .32-1.77 1.6 1.6 0 0 0-1.47-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.32-1.77l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.6 1.6 0 0 0 9 4.6h.08A1.6 1.6 0 0 0 10 3.13V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.47 1.6 1.6 0 0 0 1.77-.32l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.6 1.6 0 0 0 19.4 9v.08a1.6 1.6 0 0 0 1.47 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z",
   plus: "M12 5v14M5 12h14",
+  bell: "M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0",
+  chat: "M21 11.5a8.4 8.4 0 0 1-9 8.4 8.9 8.9 0 0 1-4-.9L3 21l1.9-4.9A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4Z",
+  stack: "M12 3 3 8l9 5 9-5-9-5ZM3 16l9 5 9-5M3 12l9 5 9-5",
   logout: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9",
 };
 
@@ -63,8 +66,13 @@ export function AppShell({
     { href: `/${locale}/clients`, label: m.nav.clients, icon: <Icon path={ICONS.clients} /> },
     { href: `/${locale}/team`, label: m.nav.team, icon: <Icon path={ICONS.team} /> },
     { href: `/${locale}/calendar`, label: m.nav.calendar, icon: <Icon path={ICONS.calendar} /> },
+    { href: `/${locale}/reminders`, label: m.nav.reminders, icon: <Icon path={ICONS.bell} /> },
+    { href: `/${locale}/chat`, label: m.nav.chat, icon: <Icon path={ICONS.chat} /> },
     { href: `/${locale}/settings`, label: m.nav.settings, icon: <Icon path={ICONS.settings} /> },
   ];
+
+  /** Five is all a thumb bar can hold without the labels colliding. */
+  const phoneNav = [nav[0], nav[1], nav[3], nav[5], nav[6]].filter(Boolean);
 
   async function signOut() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -117,6 +125,13 @@ export function AppShell({
             >
               <Icon path={ICONS.plus} />
               {m.nav.newClient}
+            </Link>
+            <Link
+              href={`/${locale}/clients/import`}
+              className="mt-2 flex items-center justify-center gap-2 rounded-md border border-border px-3 py-2.5 text-sm font-medium text-muted transition-colors hover:border-border-strong hover:text-fg"
+            >
+              <Icon path={ICONS.stack} />
+              {m.nav.import}
             </Link>
           </div>
         </nav>
@@ -204,7 +219,7 @@ export function AppShell({
         className="fixed inset-x-0 bottom-0 z-40 flex border-t border-border bg-bg-elev/95 backdrop-blur-md lg:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        {nav.map((item) => (
+        {phoneNav.map((item) => (
           <Link
             key={item.href}
             href={item.href}

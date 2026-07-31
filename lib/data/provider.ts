@@ -9,11 +9,17 @@ import type {
   DateRange,
   DuplicateMatch,
   Interaction,
+  MemberProfile,
   MemberStats,
+  Message,
   NewClientInput,
   NewInteractionInput,
+  ParsedActivityRow,
+  ParsedClientRow,
+  Reminder,
   ScheduleDay,
   Task,
+  ThreadSummary,
 } from "@/lib/types";
 import type { ClientStatus, Stage } from "@/lib/config/stages";
 
@@ -123,6 +129,47 @@ export interface DataProvider {
   /* --- Stats ------------------------------------------------------- */
   memberStats(memberId: string, range: DateRange): Promise<MemberStats>;
   teamStats(range: DateRange): Promise<MemberStats[]>;
+
+  /* --- Reminders --------------------------------------------------- */
+  listReminders(memberId: string, opts?: { includeDone?: boolean }): Promise<Reminder[]>;
+  createReminder(
+    input: Omit<Reminder, "id" | "createdAt" | "done" | "completedAt" | "snoozedUntil">,
+  ): Promise<Reminder>;
+  updateReminder(id: string, patch: Partial<Reminder>): Promise<Reminder>;
+  completeReminder(id: string, done: boolean): Promise<Reminder>;
+  snoozeReminder(id: string, untilDate: string): Promise<Reminder>;
+  deleteReminder(id: string): Promise<void>;
+  /**
+   * Creates reminders nobody typed — currently, active clients that have gone
+   * quiet. Called on login so the nudge is waiting when you arrive.
+   */
+  refreshAutoReminders(memberId: string): Promise<Reminder[]>;
+
+  /* --- Chat -------------------------------------------------------- */
+  listThreads(memberId: string): Promise<ThreadSummary[]>;
+  listMessages(memberId: string, withId: string | null): Promise<Message[]>;
+  sendMessage(
+    fromId: string,
+    toId: string | null,
+    body: string,
+    clientId?: string | null,
+  ): Promise<Message>;
+  markThreadRead(memberId: string, withId: string | null): Promise<void>;
+
+  /* --- Profile ----------------------------------------------------- */
+  getProfile(memberId: string): Promise<MemberProfile>;
+  updateProfile(memberId: string, patch: Partial<MemberProfile>): Promise<MemberProfile>;
+
+  /* --- Bulk import ------------------------------------------------- */
+  /** Writes every approved row in one go, returning how many landed. */
+  importClients(
+    rows: ParsedClientRow[],
+    ownerId: string,
+  ): Promise<{ created: number; joined: number; skipped: number }>;
+  importActivity(
+    rows: ParsedActivityRow[],
+    memberId: string,
+  ): Promise<{ created: number }>;
 
   /* --- Audit ------------------------------------------------------- */
   listAudit(entityId?: string): Promise<AuditEntry[]>;

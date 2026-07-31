@@ -3,6 +3,12 @@ import type { DataProvider } from "@/lib/data/provider";
 import { SEED_VERSION, buildSeed, type SeedData } from "@/lib/data/seed";
 import type {
   Attendance,
+  MemberProfile,
+  Message,
+  ParsedActivityRow,
+  ParsedClientRow,
+  Reminder,
+  ThreadSummary,
   AuditEntry,
   Client,
   ClientDetail,
@@ -45,7 +51,9 @@ import {
 } from "@/lib/dates";
 import { normalizePhone, similarity, uid } from "@/lib/utils";
 
-const STORAGE_KEY = "jarvis-crm:data:v1";
+const STORAGE_KEY = "jarvis-crm:data:v2";
+/** Profiles are stored apart so resetting the dataset keeps photos and hours. */
+const PROFILE_KEY = "jarvis-crm:profiles:v1";
 
 /** Anything at or above this similarity is worth warning a member about. */
 const DUPLICATE_THRESHOLD = 0.72;
@@ -864,6 +872,315 @@ export class MockProvider implements DataProvider {
 
   async teamStats(range: DateRange): Promise<MemberStats[]> {
     return Promise.all(MEMBERS.map((m) => this.memberStats(m.id, range)));
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Reminders
+   * ---------------------------------------------------------------- */
+
+  async listReminders(
+    memberId: string,
+    opts: { includeDone?: boolean } = {},
+  ): Promise<Reminder[]> {
+    return this.data.reminders
+      .filter(
+        (r) =>
+          (r.memberId === memberId || r.sharedWith.includes(memberId)) &&
+          (opts.includeDone ? true : !r.done),
+      )
+      .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  }
+
+  async createReminder(
+    input: Omit<
+      Reminder,
+      "id" | "createdAt" | "done" | "completedAt" | "snoozedUntil"
+    >,
+  ): Promise<Reminder> {
+    const reminder: Reminder = {
+      ...input,
+      id: uid("rem"),
+      done: false,
+      completedAt: null,
+      snoozedUntil: null,
+      createdAt: isoNow(),
+    };
+    this.data.reminders.unshift(reminder);
+    this.touch();
+    return reminder;
+  }
+
+  async updateReminder(id: string, patch: Partial<Reminder>): Promise<Reminder> {
+    const idx = this.data.reminders.findIndex((r) => r.id === id);
+    if (idx < 0) throw new Error(`Reminder ${id} not found`);
+    this.data.reminders[idx] = { ...this.data.reminders[idx], ...patch };
+    this.touch();
+    return this.data.reminders[idx];
+  }
+
+  async completeReminder(id: string, done: boolean): Promise<Reminder> {
+    return this.updateReminder(id, {
+      done,
+      completedAt: done ? isoNow() : null,
+    });
+  }
+
+  async snoozeReminder(id: string, untilDate: string): Promise<Reminder> {
+    return this.updateReminder(id, { snoozedUntil: untilDate });
+  }
+
+  async deleteReminder(id: string): Promise<void> {
+    this.data.reminders = this.data.reminders.filter((r) => r.id !== id);
+    this.touch();
+  }
+
+  /**
+   * Turns silence into a nudge.
+   *
+   * An active client nobody has touched for STALE_AFTER_DAYS gets a reminder
+   * created for its owner, once. Re-running is safe — an existing auto
+   * reminder for the same client is left alone rather than duplicated.
+   */
+  async refreshAutoReminders(memberId: string): Promise<Reminder[]> {
+    const created: Reminder[] = [];
+    const today = toDateKey(new Date());
+
+    for (const client of this.data.clients) {
+      if (client.ownerId !== memberId) continue;
+      if (client.status !== "active") continue;
+
+      const row = this.toRow(client);
+      if (!row.isStale) continue;
+
+      const already = this.data.reminders.some(
+        (r) => r.auto && r.clientId === client.id && !r.done,
+      );
+      if (already) continue;
+
+      created.push(
+        await this.createReminder({
+          memberId,
+          title: `${client.name} has gone quiet`,
+          note: `No contact for ${row.daysSinceContact} days. ${
+            client.nextAction || "Decide whether to chase or let it go."
+          }`,
+          dueDate: today,
+          warnDaysBefore: 0,
+          clientId: client.id,
+          sharedWith: [],
+          auto: true,
+        }),
+      );
+    }
+
+    return created;
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Chat
+   * ---------------------------------------------------------------- */
+
+  private inThread(msg: Message, memberId: string, withId: string | null): boolean {
+    if (withId === null) return msg.toId === null;
+    return (
+      (msg.fromId === memberId && msg.toId === withId) ||
+      (msg.fromId === withId && msg.toId === memberId)
+    );
+  }
+
+  async listThreads(memberId: string): Promise<ThreadSummary[]> {
+    const partners: (string | null)[] = [
+      null,
+      ...MEMBERS.filter((m) => m.id !== memberId).map((m) => m.id),
+    ];
+
+    return partners.map((withId) => {
+      const msgs = this.data.messages
+        .filter((msg) => this.inThread(msg, memberId, withId))
+        .sort((a, b) => a.sentAt.localeCompare(b.sentAt));
+
+      return {
+        withId,
+        lastMessage: msgs[msgs.length - 1] ?? null,
+        unread: msgs.filter(
+          (msg) => msg.fromId !== memberId && !msg.readBy.includes(memberId),
+        ).length,
+      };
+    });
+  }
+
+  async listMessages(memberId: string, withId: string | null): Promise<Message[]> {
+    return this.data.messages
+      .filter((msg) => this.inThread(msg, memberId, withId))
+      .sort((a, b) => a.sentAt.localeCompare(b.sentAt));
+  }
+
+  async sendMessage(
+    fromId: string,
+    toId: string | null,
+    body: string,
+    clientId: string | null = null,
+  ): Promise<Message> {
+    const message: Message = {
+      id: uid("msg"),
+      fromId,
+      toId,
+      body: body.trim(),
+      sentAt: isoNow(),
+      readBy: [fromId],
+      clientId,
+    };
+    this.data.messages.push(message);
+    this.touch();
+    return message;
+  }
+
+  async markThreadRead(memberId: string, withId: string | null): Promise<void> {
+    for (const msg of this.data.messages) {
+      if (!this.inThread(msg, memberId, withId)) continue;
+      if (!msg.readBy.includes(memberId)) msg.readBy.push(memberId);
+    }
+    this.touch();
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Profile
+   * ---------------------------------------------------------------- */
+
+  async getProfile(memberId: string): Promise<MemberProfile> {
+    const stored = this.readProfiles()[memberId];
+    const member = MEMBERS.find((m) => m.id === memberId);
+    return (
+      stored ?? {
+        memberId,
+        photo: "",
+        plannedStart: member?.plannedStart ?? DEFAULT_START,
+        plannedEnd: member?.plannedEnd ?? DEFAULT_END,
+        phone: member?.phone ?? "",
+        updatedAt: isoNow(),
+      }
+    );
+  }
+
+  async updateProfile(
+    memberId: string,
+    patch: Partial<MemberProfile>,
+  ): Promise<MemberProfile> {
+    const current = await this.getProfile(memberId);
+    const next = { ...current, ...patch, memberId, updatedAt: isoNow() };
+    const all = this.readProfiles();
+    all[memberId] = next;
+    this.writeProfiles(all);
+    return next;
+  }
+
+  /**
+   * Profiles live in their own storage key rather than the main payload, so
+   * "reset to a clean system" never wipes someone's photo and hours.
+   */
+  private readProfiles(): Record<string, MemberProfile> {
+    if (typeof window === "undefined") return {};
+    try {
+      return JSON.parse(window.localStorage.getItem(PROFILE_KEY) ?? "{}");
+    } catch {
+      return {};
+    }
+  }
+
+  private writeProfiles(all: Record<string, MemberProfile>): void {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(PROFILE_KEY, JSON.stringify(all));
+    } catch {
+      // Photo too large for the quota — the rest of the profile still saved.
+    }
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Bulk import
+   * ---------------------------------------------------------------- */
+
+  async importClients(
+    rows: ParsedClientRow[],
+    ownerId: string,
+  ): Promise<{ created: number; joined: number; skipped: number }> {
+    let created = 0;
+    let joined = 0;
+    let skipped = 0;
+
+    for (const row of rows) {
+      if (!row.include || !row.name.trim()) {
+        skipped++;
+        continue;
+      }
+
+      // Already somebody's client: join it rather than making a second copy.
+      if (row.duplicateOf) {
+        await this.addCollaborator(row.duplicateOf.clientId, ownerId);
+        if (row.whatHappened.trim()) {
+          await this.logInteraction({
+            clientId: row.duplicateOf.clientId,
+            memberId: ownerId,
+            type: "visit",
+            summary: row.whatHappened.trim(),
+          });
+        }
+        joined++;
+        continue;
+      }
+
+      await this.createClient(
+        {
+          name: row.name.trim(),
+          city: row.city.trim(),
+          stage: row.stage,
+          status: row.status,
+          ownerId,
+          broughtById: ownerId,
+          source: "Bulk import",
+          whatHappened: row.whatHappened.trim(),
+          closedReason: row.closedReason.trim(),
+          dealValueSar: row.dealValueSar,
+          contact: row.contactName.trim() || row.contactPhone.trim()
+            ? {
+                name: row.contactName.trim() || row.name.trim(),
+                phone: row.contactPhone.trim(),
+                whatsapp: row.contactPhone.trim(),
+              }
+            : undefined,
+        },
+        ownerId,
+      );
+      created++;
+    }
+
+    this.touch();
+    return { created, joined, skipped };
+  }
+
+  async importActivity(
+    rows: ParsedActivityRow[],
+    memberId: string,
+  ): Promise<{ created: number }> {
+    let created = 0;
+
+    for (const row of rows) {
+      if (!row.include || !row.clientId || !row.summary.trim()) continue;
+
+      // Midday on the stated day, so it lands on the right date whatever time
+      // the member is typing this up.
+      await this.logInteraction({
+        clientId: row.clientId,
+        memberId,
+        type: row.type,
+        summary: row.summary.trim(),
+        happenedAt: new Date(`${row.date}T12:00:00`).toISOString(),
+      });
+      created++;
+    }
+
+    this.touch();
+    return { created };
   }
 
   /* ---------------------------------------------------------------- *

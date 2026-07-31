@@ -24,14 +24,16 @@ import {
 } from "@/components/ui/badges";
 import { PageHeader } from "@/components/shell/page-header";
 import { HoursGrid } from "@/components/attendance/hours-grid";
+import { ComingSoon } from "@/components/ui/coming-soon";
+import { ReminderBanner } from "@/components/reminders/reminders";
 import { TaskPanel } from "@/components/tasks/task-panel";
 import { QuickLog } from "@/components/clients/quick-log";
-import { breakdownBars, scoreBand } from "@/lib/efficiency";
+import { EFFICIENCY_ENABLED, breakdownBars, scoreBand } from "@/lib/efficiency";
 import { rangeFor } from "@/lib/dates";
 import { formatDateTime, formatTime, relativeDays } from "@/lib/dates";
 import { formatMinutes, cn } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n/config";
-import type { ClientRow, Task } from "@/lib/types";
+import type { ClientRow } from "@/lib/types";
 
 export function Dashboard({ locale }: { locale: Locale }) {
   const { m } = useI18n();
@@ -100,6 +102,9 @@ export function Dashboard({ locale }: { locale: Locale }) {
         title={`${greeting}, ${locale === "ar" ? member.nameAr : member.name}`}
         subtitle={m.dashboard.subtitle}
       />
+
+      {/* Anything due or nearly due interrupts before the numbers do. */}
+      <ReminderBanner locale={locale} />
 
       {/* --- KPI strip ------------------------------------------------ */}
       {stats.loading || !s ? (
@@ -265,6 +270,7 @@ export function Dashboard({ locale }: { locale: Locale }) {
             )}
           </Card>
 
+          {EFFICIENCY_ENABLED ? (
           <Card>
             <CardHeader
               title={m.dashboard.efficiency}
@@ -320,6 +326,10 @@ export function Dashboard({ locale }: { locale: Locale }) {
               </div>
             )}
           </Card>
+          ) : (
+            <ComingSoon />
+          )}
+
         </div>
       </div>
     </div>

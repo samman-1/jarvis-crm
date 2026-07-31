@@ -20,6 +20,18 @@ import { fromDateKey } from "@/lib/dates";
  * next to the score so nobody has to trust a black box. Adjust the weights
  * here and both the ring and the Tuesday decision panel follow.
  */
+/**
+ * Scoring is switched OFF.
+ *
+ * The weights below were guesses, and measuring people against a guess is
+ * worse than not measuring them. Hours are still recorded in full — only the
+ * 0–100 judgement is hidden, behind a "coming soon" placeholder, until the
+ * team agrees what a good week actually looks like.
+ *
+ * Flip this to true to bring it back; nothing else needs changing.
+ */
+export const EFFICIENCY_ENABLED = false;
+
 export const WEIGHTS = {
   /** Did you actually cover the 09:00–14:00 window on the three field days? */
   attendance: 30,

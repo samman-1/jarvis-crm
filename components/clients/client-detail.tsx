@@ -50,7 +50,6 @@ export function ClientDetail({
   locale: Locale;
 }) {
   const { m } = useI18n();
-  const { user } = useSession();
   const mounted = useMounted();
 
   const { data, loading, reload } = useAsync(
@@ -86,7 +85,6 @@ export function ClientDetail({
 
   const client = data;
   const dead = client.status === "dead";
-  const owner = PUBLIC_MEMBERS.find((p) => p.id === client.ownerId);
   const closer = PUBLIC_MEMBERS.find((p) => p.id === client.closedById);
 
   return (

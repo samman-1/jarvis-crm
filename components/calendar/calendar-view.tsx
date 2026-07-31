@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/primitives";
 import { MemberBadge } from "@/components/ui/badges";
 import { HoursGrid } from "@/components/attendance/hours-grid";
+import { DayCalendar } from "@/components/calendar/day-calendar";
 import { PageHeader } from "@/components/shell/page-header";
 import { PUBLIC_MEMBERS } from "@/lib/config/members";
 import {
@@ -25,11 +26,15 @@ import {
   WEEK,
   dayRule,
 } from "@/lib/config/schedule";
-import { scoreBand, wedThuRecommendation } from "@/lib/efficiency";
+import {
+  EFFICIENCY_ENABLED,
+  scoreBand,
+  wedThuRecommendation,
+} from "@/lib/efficiency";
 import { formatTime, rangeFor, startOfWorkWeek, toDateKey } from "@/lib/dates";
 import type { Attendance, ScheduleDay } from "@/lib/types";
 import type { Locale } from "@/lib/i18n/config";
-import { cn } from "@/lib/utils";
+import { cn, formatMinutes } from "@/lib/utils";
 
 const ATTENDANCE_COLOR: Record<Attendance["status"], string> = {
   present: "var(--success)",
@@ -45,6 +50,7 @@ export function CalendarView({ locale }: { locale: Locale }) {
   const { user } = useSession();
   const mounted = useMounted();
 
+  const [tab, setTab] = useState<"days" | "schedule">("days");
   const [monthOffset, setMonthOffset] = useState(0);
 
   const month = useMemo(
@@ -124,7 +130,7 @@ export function CalendarView({ locale }: { locale: Locale }) {
         title={m.calendar.title}
         subtitle={m.calendar.subtitle}
         action={
-          <div className="flex items-center gap-2">
+          <div className={cn("items-center gap-2", tab === "schedule" ? "flex" : "hidden")}>
             <Button size="sm" variant="quiet" onClick={() => setMonthOffset((v) => v - 1)}>
               <span className="rtl:rotate-180">←</span>
             </Button>
@@ -143,8 +149,27 @@ export function CalendarView({ locale }: { locale: Locale }) {
         }
       />
 
-      {/* Your own timesheet comes first — it is the thing you actually
-          come to this page to do. */}
+      {/* Two jobs on one page: browsing what was done, and filling in the
+          week. They are separated so neither buries the other. */}
+      <div className="flex overflow-hidden rounded-md border border-border">
+        {(["days", "schedule"] as const).map((v) => (
+          <button
+            key={v}
+            type="button"
+            onClick={() => setTab(v)}
+            className={cn(
+              "flex-1 px-4 py-2.5 text-sm font-medium transition-colors",
+              tab === v ? "bg-accent-soft text-accent" : "text-muted hover:text-fg",
+            )}
+          >
+            {v === "days" ? m.calendar.tabDays : m.calendar.tabSchedule}
+          </button>
+        ))}
+      </div>
+
+      {tab === "days" ? <DayCalendar locale={locale} /> : null}
+
+      <div className={cn("space-y-5", tab !== "schedule" && "hidden")}>
       <HoursGrid
         locale={locale}
         onSaved={() => {
@@ -304,6 +329,7 @@ export function CalendarView({ locale }: { locale: Locale }) {
       </Card>
 
       <WeekDetail locale={locale} />
+      </div>
     </div>
   );
 }
@@ -367,7 +393,7 @@ function DecisionPanel({
 
   return (
     <Card>
-      <CardHeader title={m.calendar.decideTitle} hint={m.calendar.decideHint} />
+      <CardHeader title={m.calendar.decideTitle} hint={EFFICIENCY_ENABLED ? m.calendar.decideHint : m.calendar.decideHintNoScore} />
 
       <div className="space-y-3">
         {stats.map((s) => {
@@ -381,12 +407,14 @@ function DecisionPanel({
               key={s.memberId}
               className="flex flex-wrap items-center gap-3 rounded-md border border-border bg-surface-2 p-3"
             >
-              <Ring
-                value={s.efficiency.total}
-                size={52}
-                stroke={5}
-                color={band.color}
-              />
+              {EFFICIENCY_ENABLED ? (
+                <Ring
+                  value={s.efficiency.total}
+                  size={52}
+                  stroke={5}
+                  color={band.color}
+                />
+              ) : null}
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
@@ -394,14 +422,22 @@ function DecisionPanel({
                   <span className="truncate text-sm font-medium">
                     {locale === "ar" ? member.nameAr : member.name}
                   </span>
-                  <span
-                    className="text-xs font-medium"
-                    style={{ color: band.color }}
-                  >
-                    {locale === "ar" ? band.labelAr : band.label}
-                  </span>
+                  {EFFICIENCY_ENABLED ? (
+                    <span
+                      className="text-xs font-medium"
+                      style={{ color: band.color }}
+                    >
+                      {locale === "ar" ? band.labelAr : band.label}
+                    </span>
+                  ) : null}
                 </div>
-                <p className="mt-0.5 text-xs text-muted">{rec.reason}</p>
+                {/* Without a score there is nothing to recommend from, so the
+                    panel just states the facts and leaves the call to a human. */}
+                <p className="mt-0.5 text-xs text-muted">
+                  {EFFICIENCY_ENABLED
+                    ? rec.reason
+                    : `${formatMinutes(s.minutesWorked)} · ${s.interactions} ${m.team.activity.toLowerCase()}`}
+                </p>
               </div>
 
               <div className="flex flex-wrap gap-3">
@@ -439,7 +475,7 @@ function DecisionPanel({
                               )}
                             >
                               {option === "on" ? m.calendar.working : m.calendar.dayOff}
-                              {recommended && !active ? (
+                              {EFFICIENCY_ENABLED && recommended && !active ? (
                                 <span className="ms-1 text-accent">•</span>
                               ) : null}
                             </button>

@@ -14,6 +14,7 @@ import {
 import { LocaleSwitch } from "@/components/shell/locale-switch";
 import { PageHeader } from "@/components/shell/page-header";
 import { MemberBadge } from "@/components/ui/badges";
+import { ProfileEditor } from "@/components/settings/profile-editor";
 import { STAGES, STATUSES } from "@/lib/config/stages";
 import { DEFAULT_END, DEFAULT_START, WEEK } from "@/lib/config/schedule";
 import type { Locale } from "@/lib/i18n/config";
@@ -75,31 +76,7 @@ export function SettingsView({ locale }: { locale: Locale }) {
         <p className="text-sm leading-relaxed">{m.settings.phaseNoticeBody}</p>
       </div>
 
-      <Card>
-        <CardHeader title={m.settings.profile} />
-        <div className="flex items-center gap-4">
-          <MemberBadge memberId={member.id} size="md" />
-          <div className="min-w-0 flex-1">
-            <div className="font-display text-base font-semibold">
-              {locale === "ar" ? member.nameAr : member.name}
-            </div>
-
-          </div>
-        </div>
-
-        <Divider className="my-4" />
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Info label={m.settings.hours} value={`${DEFAULT_START} – ${DEFAULT_END}`} />
-          <Info
-            label={m.calendar.fieldDay}
-            value={WEEK.filter((d) => d.scored)
-              .map((d) => (locale === "ar" ? d.labelAr : d.label))
-              .join(" · ")}
-          />
-        </div>
-        <p className="mt-2 text-xs text-faint">{m.settings.hoursHint}</p>
-      </Card>
+      <ProfileEditor locale={locale} />
 
       <Card>
         <CardHeader title={m.settings.appearance} />
@@ -139,7 +116,7 @@ export function SettingsView({ locale }: { locale: Locale }) {
       <Card>
         <CardHeader title={m.settings.password} />
         <p className="text-sm leading-relaxed text-muted">
-          {m.settings.passwordPhaseA}
+          {m.settings.passwordPending}
         </p>
       </Card>
 

@@ -22,8 +22,9 @@ import {
   StatusChip,
 } from "@/components/ui/badges";
 import { PageHeader } from "@/components/shell/page-header";
+import { ComingSoon } from "@/components/ui/coming-soon";
 import { PUBLIC_MEMBERS } from "@/lib/config/members";
-import { breakdownBars, scoreBand } from "@/lib/efficiency";
+import { EFFICIENCY_ENABLED, breakdownBars, scoreBand } from "@/lib/efficiency";
 import { rangeFor } from "@/lib/dates";
 import type { RangeKey } from "@/lib/types";
 import type { Locale } from "@/lib/i18n/config";
@@ -170,10 +171,13 @@ export function TeamView({ locale }: { locale: Locale }) {
           <div className="grid gap-4 lg:grid-cols-3">
             <Card>
               <CardHeader
-                title={m.team.efficiencyTrend}
+                title={EFFICIENCY_ENABLED ? m.team.efficiencyTrend : m.team.attendance}
                 hint={range.label}
               />
-              <div className="flex items-center gap-4">
+              {!EFFICIENCY_ENABLED ? (
+                <ComingSoon compact title={m.team.efficiencyTrend} />
+              ) : null}
+              <div className={cn("items-center gap-4", EFFICIENCY_ENABLED ? "flex" : "hidden")}>
                 <Ring
                   value={current.efficiency.total}
                   color={scoreBand(current.efficiency.total).color}
@@ -369,14 +373,16 @@ function CompareGrid({
                 </div>
 
               </div>
-              <div className="ms-auto">
-                <Ring
-                  value={s.efficiency.total}
-                  size={64}
-                  stroke={6}
-                  color={band.color}
-                />
-              </div>
+              {EFFICIENCY_ENABLED ? (
+                <div className="ms-auto">
+                  <Ring
+                    value={s.efficiency.total}
+                    size={64}
+                    stroke={6}
+                    color={band.color}
+                  />
+                </div>
+              ) : null}
             </div>
 
             <div className="space-y-2 text-xs">
@@ -406,7 +412,7 @@ function CompareGrid({
               />
             </div>
 
-            <div className="mt-4 space-y-2">
+            <div className={cn("mt-4 space-y-2", !EFFICIENCY_ENABLED && "hidden")}>
               {breakdownBars(s.efficiency).map((b) => (
                 <div key={b.key}>
                   <div className="mb-1 flex items-baseline justify-between text-[10px]">

@@ -43,7 +43,9 @@ export function ClientsBoard({ locale }: { locale: Locale }) {
 
   const [view, setView] = useState<View>("table");
   const [search, setSearch] = useState("");
-  const [owner, setOwner] = useState("");
+  // Your own clients by default. Seeing all of everyone's at once was
+  // overwhelming; the toggle below opens it up when you need it.
+  const [owner, setOwner] = useState(user.id);
   const [stage, setStage] = useState("");
   const [status, setStatus] = useState("");
   const [staleOnly, setStaleOnly] = useState(false);
@@ -85,8 +87,8 @@ export function ClientsBoard({ locale }: { locale: Locale }) {
   return (
     <div className="space-y-5">
       <PageHeader
-        title={m.clients.title}
-        subtitle={m.clients.subtitle}
+        title={owner === user.id ? m.clients.mineTitle : m.clients.title}
+        subtitle={owner === user.id ? m.clients.mineSubtitle : m.clients.subtitle}
         action={
           <div className="flex items-center gap-2">
             <div className="hidden overflow-hidden rounded-md border border-border sm:flex">
@@ -146,6 +148,35 @@ export function ClientsBoard({ locale }: { locale: Locale }) {
         </button>
       ) : null}
 
+      {/* --- Mine / Everyone ------------------------------------------ */}
+      <div className="flex overflow-hidden rounded-md border border-border">
+        {[
+          { id: user.id, label: m.common.mine },
+          { id: "", label: m.common.everyone },
+        ].map((opt) => (
+          <button
+            key={opt.label}
+            type="button"
+            onClick={() => setOwner(opt.id)}
+            className={cn(
+              "flex-1 px-4 py-2.5 text-sm font-medium transition-colors",
+              owner === opt.id
+                ? "bg-accent-soft text-accent"
+                : "text-muted hover:text-fg",
+            )}
+          >
+            {opt.label}
+            <span className="tnum ms-2 text-xs opacity-70">
+              {opt.id
+                ? all.filter(
+                    (c) => c.ownerId === user.id || c.collaboratorIds.includes(user.id),
+                  ).length
+                : all.length}
+            </span>
+          </button>
+        ))}
+      </div>
+
       {/* --- Filters -------------------------------------------------- */}
       <Card padded={false} className="p-3">
         <div className="flex flex-wrap items-center gap-2">
@@ -161,7 +192,7 @@ export function ClientsBoard({ locale }: { locale: Locale }) {
             className="h-9 !w-44 text-xs"
             aria-label={m.clients.filterOwner}
           >
-            <option value="">{m.clients.filterOwner}: {m.common.all}</option>
+            <option value="">{m.clients.filterOwner}: {m.common.everyone}</option>
             {PUBLIC_MEMBERS.map((p) => (
               <option key={p.id} value={p.id}>
                 {locale === "ar" ? p.nameAr : p.name}

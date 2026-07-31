@@ -50,8 +50,13 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Everything except Next internals, the auth API and static files.
-    "/((?!_next/static|_next/image|api/auth|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    /*
+     * Everything except Next internals, the auth API and static files.
+     * The web manifest and icons must be excluded explicitly — otherwise the
+     * locale redirect rewrites them to /en/manifest.webmanifest and the phone
+     * cannot install the app.
+     */
+    "/((?!_next/static|_next/image|api/auth|favicon.ico|manifest.webmanifest|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
 
