@@ -422,6 +422,20 @@ export interface ParsedClientRow {
   raw: string;
 }
 
+export interface ParsedTaskRow {
+  id: string;
+  title: string;
+  /** Empty means the task is not about any client, which is allowed. */
+  clientId: string;
+  /** What the parser read as a client name, when it could not match one. */
+  clientGuess: string;
+  /** yyyy-MM-dd, or empty for no deadline. */
+  dueAt: string;
+  priority: Priority;
+  include: boolean;
+  raw: string;
+}
+
 export interface ParsedActivityRow {
   id: string;
   clientId: string;

@@ -17,6 +17,7 @@ import type {
   NewInteractionInput,
   ParsedActivityRow,
   ParsedClientRow,
+  ParsedTaskRow,
   Reminder,
   ScheduleDay,
   Task,
@@ -177,6 +178,11 @@ export interface DataProvider {
   importActivity(
     rows: ParsedActivityRow[],
     memberId: string,
+  ): Promise<{ created: number }>;
+  /** Tasks with a client and tasks about nothing in particular, together. */
+  importTasks(
+    rows: ParsedTaskRow[],
+    assigneeId: string,
   ): Promise<{ created: number }>;
 
   /* --- Audit ------------------------------------------------------- */

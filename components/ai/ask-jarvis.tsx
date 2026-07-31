@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useSession } from "@/components/providers/session-provider";
@@ -32,6 +33,16 @@ const MAX_KEPT = 40;
 export function AskJarvis({ locale }: { locale: Locale }) {
   const { m } = useI18n();
   const { user } = useSession();
+  const pathname = usePathname();
+
+  /*
+   * Not on the chat page.
+   *
+   * That page has its own composer pinned to the bottom right, and a floating
+   * button lands directly on top of its Send. Two ways to type a message on
+   * one screen, one covering the other, is worse than one.
+   */
+  const hidden = pathname?.includes("/chat") ?? false;
 
   const [open, setOpen] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -116,15 +127,20 @@ export function AskJarvis({ locale }: { locale: Locale }) {
         onClick={() => setOpen(true)}
         aria-label={m.ask.title}
         className={cn(
-          "fixed z-40 flex items-center gap-2 rounded-full bg-accent px-4 py-3 text-accent-fg shadow-lg transition-transform hover:bg-accent-hover active:scale-95",
+          "fixed z-40 flex items-center justify-center rounded-full bg-accent text-accent-fg shadow-lg transition-transform hover:bg-accent-hover active:scale-95",
+          // A circle on a phone. The full label made it wide enough to cover
+          // whatever sat in that corner, which on the routes page was the map.
+          "size-12 sm:gap-2 sm:px-4 sm:py-3 sm:w-auto sm:h-auto",
           "bottom-20 lg:bottom-6",
           locale === "ar" ? "start-4" : "end-4",
-          open && "hidden",
+          (open || hidden) && "hidden",
         )}
         style={{ marginBottom: "env(safe-area-inset-bottom)" }}
       >
         <SparkIcon />
-        <span className="text-xs font-semibold">{m.ask.short}</span>
+        <span className="hidden text-xs font-semibold sm:inline">
+          {m.ask.short}
+        </span>
       </button>
 
       {open ? (

@@ -3,6 +3,8 @@ import type {
   ClientRow,
   ParsedActivityRow,
   ParsedClientRow,
+  ParsedTaskRow,
+  Priority,
 } from "@/lib/types";
 import type { ClientStatus, InteractionType, Stage } from "@/lib/config/stages";
 import { INTERACTION_TYPES } from "@/lib/config/stages";
@@ -370,6 +372,149 @@ export function parseActivity(
       // Blank when the line carries no time — the table shows an empty field
       // rather than inventing one.
       time,
+      include: true,
+      raw: line,
+    });
+  }
+
+  return rows;
+}
+
+/* ------------------------------------------------------------------ *
+ * Tasks
+ * ------------------------------------------------------------------ */
+
+const HIGH_WORDS = ["urgent", "asap", "important", "عاجل", "مهم", "ضروري"];
+const LOW_WORDS = ["someday", "eventually", "when i can", "لاحقاً", "لاحقا"];
+
+/**
+ * Dates for tasks point forwards, not backwards.
+ *
+ * `dayNameToDate` reads "Sunday" as the Sunday that has already happened,
+ * because activity is always something you did. A task is the opposite: due
+ * "Sunday" means the Sunday coming. Same vocabulary, opposite direction.
+ */
+function dueDateFrom(line: string, reference: Date): string {
+  const lower = line.toLowerCase();
+
+  if (lower.includes("today") || lower.includes("اليوم"))
+    return toDateKey(reference);
+  if (lower.includes("tomorrow") || lower.includes("بكرة") || lower.includes("غداً"))
+    return toDateKey(addDays(reference, 1));
+
+  const iso = line.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return iso[0];
+
+  const dm = line.match(/\b(\d{1,2})[\/\-](\d{1,2})\b/);
+  if (dm) {
+    const d = new Date(reference);
+    d.setMonth(Number(dm[2]) - 1, Number(dm[1]));
+    // A date already behind us must mean next year's one.
+    if (d < reference) d.setFullYear(d.getFullYear() + 1);
+    return toDateKey(d);
+  }
+
+  for (const day of WEEK) {
+    const names = [day.label.toLowerCase(), day.labelAr, day.short.toLowerCase()];
+    if (!names.some((n) => lower.includes(n))) continue;
+    let date = addDays(startOfWorkWeek(reference), day.day);
+    while (date < reference) date = addDays(date, 7);
+    return toDateKey(date);
+  }
+
+  return "";
+}
+
+/**
+ * Finds a client anywhere in the line, not just at the front.
+ *
+ * Activity lines open with the company ("Zahra Trading, walked in"). Tasks
+ * bury it mid-sentence ("call Zahra Trading about the quote"), so the
+ * head-first match used for activity finds nothing here.
+ */
+function clientAnywhere(
+  line: string,
+  clients: ClientRow[],
+): { id: string; guess: string } {
+  const lower = line.toLowerCase();
+  let bestId = "";
+  let bestGuess = "";
+  let bestScore = 0;
+
+  for (const c of clients) {
+    for (const name of [c.name, c.nameAr].filter(Boolean)) {
+      const needle = name.toLowerCase();
+      if (needle.length < 3) continue;
+
+      // A straight containment is the strongest signal available.
+      if (lower.includes(needle)) {
+        if (needle.length > bestScore) {
+          bestScore = needle.length;
+          bestId = c.id;
+          bestGuess = name;
+        }
+        continue;
+      }
+
+      // Otherwise slide a window the width of the name across the line, so a
+      // typo or a missing letter still lands.
+      const words = line.split(/\s+/).filter(Boolean);
+      const width = name.split(/\s+/).length;
+      for (let i = 0; i + width <= words.length; i++) {
+        const window = words.slice(i, i + width).join(" ");
+        if (window.length < 3) continue;
+        if (similarity(window, name) >= 0.8 && window.length > bestScore) {
+          bestScore = window.length;
+          bestId = c.id;
+          bestGuess = window;
+        }
+      }
+    }
+  }
+
+  return { id: bestId, guess: bestGuess };
+}
+
+/**
+ * Reads a list of things to do into task rows.
+ *
+ * One task per line. A client is attached when the line names one, and left
+ * off when it does not, because plenty of what these three owe each other is
+ * not about any company: "renew the domain", "pay the Meta invoice".
+ */
+export function parseTasks(
+  text: string,
+  clients: ClientRow[],
+  reference: Date = new Date(),
+): ParsedTaskRow[] {
+  const lines = text
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  const rows: ParsedTaskRow[] = [];
+
+  for (const line of lines) {
+    const stripped = line.replace(LEADING_NOISE, "").trim();
+    if (!stripped) continue;
+
+    const lower = stripped.toLowerCase();
+    const priority: Priority = HIGH_WORDS.some((w) => lower.includes(w))
+      ? "high"
+      : LOW_WORDS.some((w) => lower.includes(w))
+        ? "low"
+        : "normal";
+
+    const match = clientAnywhere(stripped, clients);
+
+    rows.push({
+      id: uid("task"),
+      title: stripped,
+      clientId: match.id,
+      clientGuess: match.guess,
+      dueAt: dueDateFrom(stripped, reference),
+      priority,
       include: true,
       raw: line,
     });

@@ -7,7 +7,7 @@ export function cn(
 
 /** Money is always SAR in this system. Empty stays empty — never "0 SAR". */
 export function formatSar(value: number | null | undefined): string {
-  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  if (value === null || value === undefined || Number.isNaN(value)) return "";
   return new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 0,
   }).format(value);

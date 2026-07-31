@@ -84,7 +84,9 @@ export function RouteToday({ locale }: { locale: Locale }) {
     <Card>
       <CardHeader
         title={isToday ? m.routes.todayTitle : m.routes.nextTitle}
-        hint={route ? dateLabel : undefined}
+        // An empty route is not a plan, so it does not get a date. Showing
+        // "Sunday 2 Aug" above "no route planned" read as a contradiction.
+        hint={route && route.stops.length > 0 ? dateLabel : undefined}
         action={
           <Link href={`/${locale}/routes`}>
             <Button size="sm" variant="secondary">
@@ -149,7 +151,7 @@ export function RouteToday({ locale }: { locale: Locale }) {
           {mapsUrl ? (
             <a href={mapsUrl} target="_blank" rel="noreferrer" className="mt-3 block">
               <Button size="sm" variant="primary" className="w-full">
-                🗺 {m.routes.openInMaps}
+                {m.routes.openInMaps}
               </Button>
             </a>
           ) : null}

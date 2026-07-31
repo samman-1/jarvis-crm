@@ -18,6 +18,7 @@ import type {
   NewInteractionInput,
   ParsedActivityRow,
   ParsedClientRow,
+  ParsedTaskRow,
   Reminder,
   ScheduleDay,
   Task,
@@ -253,6 +254,9 @@ export class SupabaseProvider implements DataProvider {
   }
   importActivity(rows: ParsedActivityRow[], memberId: string) {
     return call<{ created: number }>("importActivity", [rows, memberId]);
+  }
+  importTasks(rows: ParsedTaskRow[], assigneeId: string) {
+    return call<{ created: number }>("importTasks", [rows, assigneeId]);
   }
 
   /* --- Audit + housekeeping ---------------------------------------- */

@@ -13,7 +13,9 @@ export default async function ImportPage({
   return (
     <BulkImport
       locale={isLocale(locale) ? locale : "en"}
-      initialMode={mode === "activity" ? "activity" : "clients"}
+      initialMode={
+        mode === "activity" || mode === "tasks" ? mode : "clients"
+      }
     />
   );
 }

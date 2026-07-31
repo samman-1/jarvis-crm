@@ -88,9 +88,13 @@ export function AppShell({
   }
 
   return (
-    <div className="flex min-h-screen bg-bg">
+    <div className="relative flex min-h-screen">
+      {/* The background is painted by <body>; this layer only lights it.
+          Everything after it carries z-10 so nothing can fall behind. */}
+      <JarvisBackground />
+
       {/* --- Sidebar ------------------------------------------------- */}
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-border bg-bg-elev ltr:border-r rtl:border-l lg:flex">
+      <aside className="sticky top-0 z-10 hidden h-screen w-64 shrink-0 flex-col border-border bg-bg-elev/95 ltr:border-r rtl:border-l lg:flex">
         <div className="flex h-16 shrink-0 items-center px-5">
           <Link href={`/${locale}/dashboard`} className="flex items-center gap-2.5">
             <span className="size-2 animate-live rounded-full bg-accent" />
@@ -171,7 +175,7 @@ export function AppShell({
       </aside>
 
       {/* --- Main ---------------------------------------------------- */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="relative z-10 flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-border bg-bg/85 px-4 backdrop-blur-md sm:h-16 sm:px-6">
           {/* On a phone the wordmark replaces the hamburger — navigation
               lives in the bottom bar where a thumb can reach it. */}
@@ -234,6 +238,29 @@ export function AppShell({
       {/* Reachable from every page, because the question usually arrives
           while you are looking at something else. */}
       <AskJarvis locale={locale} />
+    </div>
+  );
+}
+
+/**
+ * The moving light behind the app.
+ *
+ * Four elements, no state, no JavaScript, no listeners. It is fixed to the
+ * viewport and marked pointer-events-none, so it cannot catch a tap, cannot
+ * affect scrolling, and cannot push anything out of place. Everything it does
+ * is transform and opacity, which the compositor handles without asking the
+ * page to lay out again.
+ *
+ * `aria-hidden` keeps it out of the accessibility tree entirely: it is
+ * decoration, and a screen reader has nothing to say about it.
+ */
+function JarvisBackground() {
+  return (
+    <div className="jarvis-bg" aria-hidden>
+      <span className="orb-a" />
+      <span className="orb-b" />
+      <span className="orb-c" />
+      <span className="sweep" />
     </div>
   );
 }

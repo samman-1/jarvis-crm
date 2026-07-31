@@ -21,6 +21,7 @@ import type {
   NewInteractionInput,
   ParsedActivityRow,
   ParsedClientRow,
+  ParsedTaskRow,
   Reminder,
   ScheduleDay,
   Task,
@@ -1229,6 +1230,29 @@ export class SupabaseServerProvider implements DataProvider {
         type: row.type,
         summary: row.summary.trim(),
         happenedAt: new Date(`${row.date}T${row.time || "12:00"}:00`).toISOString(),
+      });
+      created++;
+    }
+    return { created };
+  }
+
+  async importTasks(
+    rawRows: ParsedTaskRow[] | null,
+    assigneeId: string,
+  ): Promise<{ created: number }> {
+    const rows = rawRows ?? [];
+    let created = 0;
+    for (const row of rows) {
+      if (!row.include || !row.title.trim()) continue;
+      await this.createTask({
+        title: row.title.trim(),
+        // A task about nothing in particular is a real task, so an empty
+        // client is stored as null rather than rejected.
+        clientId: row.clientId || null,
+        assigneeId,
+        dueAt: row.dueAt ? `${row.dueAt}T09:00:00.000Z` : null,
+        status: "open",
+        priority: row.priority,
       });
       created++;
     }

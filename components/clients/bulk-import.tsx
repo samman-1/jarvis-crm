@@ -15,7 +15,7 @@ import {
   Textarea,
 } from "@/components/ui/primitives";
 import { PageHeader } from "@/components/shell/page-header";
-import { parseActivity, parseClients } from "@/lib/import/parse";
+import { parseActivity, parseClients, parseTasks } from "@/lib/import/parse";
 import {
   INTERACTION_TYPES,
   STAGES,
@@ -25,11 +25,15 @@ import {
   type Stage,
 } from "@/lib/config/stages";
 import { PUBLIC_MEMBERS } from "@/lib/config/members";
-import type { ParsedActivityRow, ParsedClientRow } from "@/lib/types";
+import type {
+  ParsedActivityRow,
+  ParsedClientRow,
+  ParsedTaskRow,
+} from "@/lib/types";
 import type { Locale } from "@/lib/i18n/config";
 import { cn } from "@/lib/utils";
 
-type Mode = "clients" | "activity";
+type Mode = "clients" | "activity" | "tasks";
 
 const CLIENT_EXAMPLE = `Al-Faisal Trading - walked in, met Ahmed the ops manager, he asked for a quote
 Zad Restaurant - DEAD, owner shouted at us and said don't come back
@@ -43,6 +47,11 @@ const ACTIVITY_EXAMPLE = `Sunday
 Tuesday
 - 10:30 Nakheel Dental, meeting with Dr Reem, she wants a pilot
 - Sent Noor Academy the proposal`;
+
+const TASK_EXAMPLE = `Call Areej Perfumes back about the quote, Sunday
+Send Nakheel Dental the pilot proposal, urgent
+Renew the domain
+Pay the Meta invoice before Thursday`;
 
 /**
  * Chosen in the client dropdown to mean "this company is not in the system
@@ -75,6 +84,7 @@ export function BulkImport({
   const [text, setText] = useState("");
   const [clientRows, setClientRows] = useState<ParsedClientRow[] | null>(null);
   const [activityRows, setActivityRows] = useState<ParsedActivityRow[] | null>(null);
+  const [taskRows, setTaskRows] = useState<ParsedTaskRow[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState("");
 
@@ -85,19 +95,16 @@ export function BulkImport({
 
   function readIt() {
     const clients = existing.data ?? [];
-    if (mode === "clients") {
-      setClientRows(parseClients(text, clients));
-      setActivityRows(null);
-    } else {
-      setActivityRows(parseActivity(text, clients));
-      setClientRows(null);
-    }
+    setClientRows(mode === "clients" ? parseClients(text, clients) : null);
+    setActivityRows(mode === "activity" ? parseActivity(text, clients) : null);
+    setTaskRows(mode === "tasks" ? parseTasks(text, clients) : null);
   }
 
   function reset() {
     setText("");
     setClientRows(null);
     setActivityRows(null);
+    setTaskRows(null);
     setResult("");
   }
 
@@ -174,7 +181,39 @@ export function BulkImport({
     }
   }
 
+  /**
+   * Tasks save whether or not they belong to a client.
+   *
+   * Plenty of what these three owe is not about any company: renew the
+   * domain, pay the invoice. Those are real tasks, so an empty client is
+   * stored as "not about a client" rather than treated as an unfinished row.
+   */
+  async function saveTasks() {
+    if (!taskRows) return;
+    setBusy(true);
+    try {
+      const out = await db().importTasks(taskRows, user.id);
+      setResult(`${out.created} ${m.importer.tasksAdded}`);
+      setTaskRows(null);
+      setText("");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const clients = existing.data ?? [];
+  const example =
+    mode === "clients"
+      ? CLIENT_EXAMPLE
+      : mode === "activity"
+        ? ACTIVITY_EXAMPLE
+        : TASK_EXAMPLE;
+  const pasteHint =
+    mode === "clients"
+      ? m.importer.pasteHintClients
+      : mode === "activity"
+        ? m.importer.pasteHintActivity
+        : m.importer.pasteHintTasks;
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
@@ -182,7 +221,7 @@ export function BulkImport({
 
       {/* --- What am I pasting? --------------------------------------- */}
       <div className="flex overflow-hidden rounded-md border border-border">
-        {(["clients", "activity"] as Mode[]).map((v) => (
+        {(["clients", "activity", "tasks"] as Mode[]).map((v) => (
           <button
             key={v}
             type="button"
@@ -195,7 +234,11 @@ export function BulkImport({
               mode === v ? "bg-accent-soft text-accent" : "text-muted hover:text-fg",
             )}
           >
-            {v === "clients" ? m.importer.modeClients : m.importer.modeActivity}
+            {v === "clients"
+              ? m.importer.modeClients
+              : v === "activity"
+                ? m.importer.modeActivity
+                : m.importer.modeTasks}
           </button>
         ))}
       </div>
@@ -206,18 +249,13 @@ export function BulkImport({
         </div>
       ) : null}
 
-      {!clientRows && !activityRows ? (
+      {!clientRows && !activityRows && !taskRows ? (
         <Card>
-          <CardHeader
-            title={m.importer.pasteTitle}
-            hint={
-              mode === "clients" ? m.importer.pasteHintClients : m.importer.pasteHintActivity
-            }
-          />
+          <CardHeader title={m.importer.pasteTitle} hint={pasteHint} />
           <Textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder={mode === "clients" ? CLIENT_EXAMPLE : ACTIVITY_EXAMPLE}
+            placeholder={example}
             className="min-h-56 font-mono text-xs leading-relaxed"
           />
           <div className="mt-3 flex flex-wrap gap-2">
@@ -226,7 +264,7 @@ export function BulkImport({
             </Button>
             <Button
               variant="ghost"
-              onClick={() => setText(mode === "clients" ? CLIENT_EXAMPLE : ACTIVITY_EXAMPLE)}
+              onClick={() => setText(example)}
             >
               {m.importer.useExample}
             </Button>
@@ -563,6 +601,130 @@ export function BulkImport({
               {busy
                 ? m.common.saving
                 : `${m.importer.saveAll} (${activityRows.filter((r) => r.include && r.clientId).length})`}
+            </Button>
+            <Button variant="ghost" onClick={reset}>
+              {m.common.cancel}
+            </Button>
+          </div>
+        </Card>
+      ) : null}
+
+      {/* --- Tasks preview -------------------------------------------- */}
+      {taskRows ? (
+        <Card>
+          <CardHeader
+            title={m.importer.checkTitle}
+            hint={`${taskRows.filter((r) => r.include).length} ${m.importer.willBeSaved}`}
+          />
+
+          <div className="space-y-2">
+            {taskRows.map((row, i) => (
+              <div
+                key={row.id}
+                className={cn(
+                  "rounded-md border border-border bg-surface-2 p-3",
+                  !row.include && "opacity-50",
+                )}
+              >
+                <div className="flex items-start gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setTaskRows((rows) =>
+                        rows!.map((r, j) =>
+                          j === i ? { ...r, include: !r.include } : r,
+                        ),
+                      )
+                    }
+                    className={cn(
+                      "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-sm border text-xs",
+                      row.include
+                        ? "border-accent bg-accent text-accent-fg"
+                        : "border-border-strong",
+                    )}
+                  >
+                    {row.include ? "✓" : ""}
+                  </button>
+                  <input
+                    value={row.title}
+                    onChange={(e) =>
+                      setTaskRows((rows) =>
+                        rows!.map((r, j) =>
+                          j === i ? { ...r, title: e.target.value } : r,
+                        ),
+                      )
+                    }
+                    className="min-w-0 flex-1 bg-transparent text-sm text-fg focus:outline-none"
+                  />
+                </div>
+
+                <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                  {/* A blank client is a valid answer here, not a gap to fill. */}
+                  <Select
+                    value={row.clientId}
+                    onChange={(e) =>
+                      setTaskRows((rows) =>
+                        rows!.map((r, j) =>
+                          j === i ? { ...r, clientId: e.target.value } : r,
+                        ),
+                      )
+                    }
+                    className="h-10 text-xs"
+                  >
+                    <option value="">{m.importer.noClientTask}</option>
+                    {clients.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {locale === "ar" && c.nameAr ? c.nameAr : c.name}
+                      </option>
+                    ))}
+                  </Select>
+
+                  <Input
+                    type="date"
+                    value={row.dueAt}
+                    onChange={(e) =>
+                      setTaskRows((rows) =>
+                        rows!.map((r, j) =>
+                          j === i ? { ...r, dueAt: e.target.value } : r,
+                        ),
+                      )
+                    }
+                    aria-label={m.importer.due}
+                    className="h-10 text-xs"
+                    dir="ltr"
+                  />
+
+                  <Select
+                    value={row.priority}
+                    onChange={(e) =>
+                      setTaskRows((rows) =>
+                        rows!.map((r, j) =>
+                          j === i
+                            ? { ...r, priority: e.target.value as ParsedTaskRow["priority"] }
+                            : r,
+                        ),
+                      )
+                    }
+                    className="h-10 text-xs"
+                  >
+                    <option value="low">{m.actions.low}</option>
+                    <option value="normal">{m.actions.normal}</option>
+                    <option value="high">{m.actions.high}</option>
+                  </Select>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button
+              variant="primary"
+              onClick={saveTasks}
+              disabled={busy || !taskRows.some((r) => r.include && r.title.trim())}
+            >
+              {busy
+                ? m.common.saving
+                : `${m.importer.saveAll} (${taskRows.filter((r) => r.include && r.title.trim()).length})`}
             </Button>
             <Button variant="ghost" onClick={reset}>
               {m.common.cancel}

@@ -8,6 +8,7 @@ import type {
   DayRoute,
   ParsedActivityRow,
   ParsedClientRow,
+  ParsedTaskRow,
   Reminder,
   ThreadSummary,
   AuditEntry,
@@ -1232,6 +1233,27 @@ export class MockProvider implements DataProvider {
       created++;
     }
 
+    this.touch();
+    return { created };
+  }
+
+  async importTasks(
+    rows: ParsedTaskRow[],
+    assigneeId: string,
+  ): Promise<{ created: number }> {
+    let created = 0;
+    for (const row of rows) {
+      if (!row.include || !row.title.trim()) continue;
+      await this.createTask({
+        title: row.title.trim(),
+        clientId: row.clientId || null,
+        assigneeId,
+        dueAt: row.dueAt ? `${row.dueAt}T09:00:00.000Z` : null,
+        status: "open",
+        priority: row.priority,
+      });
+      created++;
+    }
     this.touch();
     return { created };
   }

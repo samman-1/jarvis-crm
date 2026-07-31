@@ -5,6 +5,7 @@ import type {
   ComponentPropsWithRef,
   ReactNode,
 } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ *
@@ -210,6 +211,60 @@ export function Textarea({
   return (
     <textarea
       className={cn(CONTROL, "min-h-24 resize-y py-2.5 leading-relaxed", className)}
+      {...props}
+    />
+  );
+}
+
+/**
+ * The one-line composer used by chat and by Ask Jarvis.
+ *
+ * Not built on Textarea, deliberately. `cn` is a plain join with no class
+ * merging, so a caller passing `min-h-11` to Textarea does not replace its
+ * `min-h-24` — both land in the class list and the taller one wins. That is
+ * why the message box was four lines tall before anyone had typed anything.
+ *
+ * Starts at one line and grows with the text up to `maxRows`, the way every
+ * messaging app people already use behaves.
+ */
+export function MessageInput({
+  className,
+  maxRows = 6,
+  onChange,
+  value,
+  ...props
+}: ComponentPropsWithRef<"textarea"> & { maxRows?: number }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  const resize = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    const line = parseFloat(getComputedStyle(el).lineHeight) || 20;
+    // Padding is part of scrollHeight, so the cap has to include it too.
+    const max = line * maxRows + 20;
+    el.style.height = `${Math.min(el.scrollHeight, max)}px`;
+    el.style.overflowY = el.scrollHeight > max ? "auto" : "hidden";
+  }, [maxRows]);
+
+  // Also runs when the value is cleared after sending, which is the case a
+  // pure onChange handler misses.
+  useEffect(resize, [resize, value]);
+
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      value={value}
+      onChange={(e) => {
+        onChange?.(e);
+        resize();
+      }}
+      className={cn(
+        CONTROL,
+        "block resize-none py-2.5 leading-relaxed",
+        className,
+      )}
       {...props}
     />
   );

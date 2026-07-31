@@ -105,7 +105,7 @@ export function relativeDays(iso: string | null, locale: "en" | "ar" = "en"): st
 }
 
 export function formatDate(iso: string | null, locale: "en" | "ar" = "en"): string {
-  if (!iso) return "—";
+  if (!iso) return "";
   return new Intl.DateTimeFormat(locale === "ar" ? "ar-SA" : "en-GB", {
     day: "numeric",
     month: "short",
@@ -115,7 +115,7 @@ export function formatDate(iso: string | null, locale: "en" | "ar" = "en"): stri
 }
 
 export function formatDateTime(iso: string | null, locale: "en" | "ar" = "en"): string {
-  if (!iso) return "—";
+  if (!iso) return "";
   return new Intl.DateTimeFormat(locale === "ar" ? "ar-SA" : "en-GB", {
     day: "numeric",
     month: "short",
@@ -133,7 +133,7 @@ export function formatDateTime(iso: string | null, locale: "en" | "ar" = "en"): 
  * make "09:00" render back as something else on a machine set elsewhere.
  */
 export function formatTime(iso: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "";
   const d = new Date(iso);
   return `${String(d.getHours()).padStart(2, "0")}:${String(
     d.getMinutes(),

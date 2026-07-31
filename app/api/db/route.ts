@@ -64,6 +64,7 @@ const ALLOWED = new Set<keyof DataProvider>([
   "updateProfile",
   "importClients",
   "importActivity",
+  "importTasks",
   "listAudit",
   "exportAll",
   "importAll",

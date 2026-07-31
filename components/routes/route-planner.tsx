@@ -141,6 +141,8 @@ function RouteCard({
   m: ReturnType<typeof useI18n>["m"];
 }) {
   const [adding, setAdding] = useState("");
+  // Off by default: the list is the route, the map is a second opinion.
+  const [showMap, setShowMap] = useState(false);
 
   const byId = useMemo(
     () => new Map(clients.map((c) => [c.id, c])),
@@ -176,6 +178,40 @@ function RouteCard({
       (waypoints ? `&waypoints=${waypoints}` : "") +
       "&travelmode=driving"
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route.stops, clients]);
+
+  /**
+   * The same stops, drawn instead of listed. No API key, no billing account.
+   *
+   * This has to address /maps/embed directly. The friendlier-looking
+   * `maps.google.com/maps?...&output=embed` is a 301 to exactly this URL, and
+   * the redirect response carries `X-Frame-Options: SAMEORIGIN`, so a browser
+   * refuses to render it in a frame and you get a silent blank rectangle. The
+   * endpoint below answers 200 with no such header.
+   *
+   * `pb` is Google's own packed parameter format. One place is a pin; two or
+   * more is a driving line through them, in the order the stops are listed:
+   *
+   *   pin          !1m3!2m1!1s<place>!6i<zoom>
+   *   directions   !1m{2n+1}!4m{2n}  then  !4m1!2s<place>  per place
+   */
+  const embedUrl = useMemo(() => {
+    if (mappable.length === 0) return "";
+
+    // Spaces are "+" inside pb, and "!" is the delimiter, so it cannot survive
+    // inside a place name.
+    const place = (s: RouteStop) =>
+      encodeURIComponent(queryFor(s).replace(/!/g, " ")).replace(/%20/g, "+");
+
+    const points = mappable.map(place);
+    const pb =
+      points.length === 1
+        ? `!1m3!2m1!1s${points[0]}!6i13`
+        : `!1m${2 * points.length + 1}!4m${2 * points.length}` +
+          points.map((p) => `!4m1!2s${p}`).join("");
+
+    return `https://www.google.com/maps/embed?origin=mfe&pb=${pb}`;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [route.stops, clients]);
 
@@ -387,11 +423,45 @@ function RouteCard({
             ))}
           </Select>
 
+          {/* The map is a choice, not the way routes work. Off by default,
+              because a list of names is a perfectly good plan and loading a
+              map you did not ask for costs data on a phone in the street. */}
+          {mappable.length > 0 ? (
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => setShowMap((v) => !v)}
+                className={cn(
+                  "flex w-full items-center justify-between rounded-md border px-3 py-2.5 text-xs font-medium transition-colors",
+                  showMap
+                    ? "border-accent bg-accent-soft text-accent"
+                    : "border-border text-muted hover:text-fg",
+                )}
+              >
+                <span>{showMap ? m.routes.hideMap : m.routes.showMap}</span>
+                <span className="text-faint">{showMap ? "▲" : "▼"}</span>
+              </button>
+
+              {showMap ? (
+                <div className="overflow-hidden rounded-md border border-border">
+                  <iframe
+                    key={embedUrl}
+                    src={embedUrl}
+                    title={m.routes.mapTitle}
+                    className="block h-64 w-full border-0 sm:h-80"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
           <div className="flex flex-wrap gap-2">
             {mapsUrl ? (
               <a href={mapsUrl} target="_blank" rel="noreferrer">
                 <Button variant="primary" size="sm">
-                  🗺 {m.routes.openInMaps}
+                  {m.routes.openInMaps}
                 </Button>
               </a>
             ) : null}

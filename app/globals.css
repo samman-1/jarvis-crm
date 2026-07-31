@@ -253,6 +253,142 @@
     bottom: -180px;
     inset-inline-end: -140px;
   }
+  /* The login screen gets the same drift as the app behind it. */
+  @media (prefers-reduced-motion: no-preference) {
+    .jarvis-orbs::before {
+      animation: jarvis-drift-a 34s ease-in-out infinite;
+    }
+    .jarvis-orbs::after {
+      animation: jarvis-drift-b 40s ease-in-out infinite;
+    }
+  }
+
+  /* ---------------------------------------------------------------- *
+   * The living background
+   *
+   * Three slow light sources drifting behind the whole app, plus one
+   * scan line crossing every three quarters of a minute. Taken from the
+   * Jarvis client portal so the internal tool feels like the same
+   * product, at longer periods because this screen gets stared at for
+   * an hour, not glanced at for ten seconds.
+   *
+   * Rules it must never break: fixed to the viewport so scrolling is
+   * untouched, pointer-events none so it cannot swallow a tap, behind
+   * everything on the z axis, and composited only through transform and
+   * opacity so it never forces the page to lay out again. Radial
+   * gradients rather than blur filters, because a blurred 500px div
+   * repainted every frame is what makes a phone hot.
+   * ---------------------------------------------------------------- */
+  .jarvis-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    contain: strict;
+  }
+  .jarvis-bg > span {
+    position: absolute;
+    display: block;
+    border-radius: 999px;
+    will-change: transform;
+  }
+  .jarvis-bg .orb-a {
+    width: 46rem;
+    height: 46rem;
+    top: -16rem;
+    inset-inline-start: -12rem;
+    background: radial-gradient(circle, var(--orb-a) 0%, transparent 68%);
+  }
+  .jarvis-bg .orb-b {
+    width: 40rem;
+    height: 40rem;
+    bottom: -14rem;
+    inset-inline-end: -10rem;
+    background: radial-gradient(circle, var(--orb-b) 0%, transparent 68%);
+  }
+  .jarvis-bg .orb-c {
+    width: 34rem;
+    height: 34rem;
+    top: 30%;
+    inset-inline-end: 20%;
+    background: radial-gradient(circle, var(--orb-a) 0%, transparent 70%);
+    opacity: 0.6;
+  }
+  .jarvis-bg .sweep {
+    top: 0;
+    bottom: 0;
+    inset-inline-start: -20%;
+    width: 18%;
+    border-radius: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--grid-line),
+      transparent
+    );
+  }
+
+  @keyframes jarvis-drift-a {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+      transform: translate3d(60px, -40px, 0) scale(1.12);
+    }
+  }
+  @keyframes jarvis-drift-b {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+      transform: translate3d(-50px, -56px, 0) scale(1.08);
+    }
+  }
+  @keyframes jarvis-drift-c {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+      transform: translate3d(-70px, 50px, 0) scale(1.16);
+    }
+  }
+  @keyframes jarvis-sweep {
+    0% {
+      transform: translateX(0);
+      opacity: 0;
+    }
+    12% {
+      opacity: 1;
+    }
+    88% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(650%);
+      opacity: 0;
+    }
+  }
+
+  /* Motion is opt-in: a device asking for less gets the same layout,
+     lit the same way, simply standing still. */
+  @media (prefers-reduced-motion: no-preference) {
+    .jarvis-bg .orb-a {
+      animation: jarvis-drift-a 34s ease-in-out infinite;
+    }
+    .jarvis-bg .orb-b {
+      animation: jarvis-drift-b 40s ease-in-out infinite;
+    }
+    .jarvis-bg .orb-c {
+      animation: jarvis-drift-c 46s ease-in-out infinite;
+    }
+    .jarvis-bg .sweep {
+      animation: jarvis-sweep 45s linear infinite;
+    }
+  }
 
   @keyframes jarvis-in {
     from {
@@ -266,6 +402,33 @@
   }
   .animate-enter {
     animation: jarvis-in 0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+
+  /* Cards arriving in sequence rather than all at once. The delay is
+     capped so a long list never leaves the last row waiting. */
+  .animate-rise {
+    animation: jarvis-in 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .stagger > * {
+    animation: jarvis-in 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .stagger > *:nth-child(1) {
+    animation-delay: 0.02s;
+  }
+  .stagger > *:nth-child(2) {
+    animation-delay: 0.06s;
+  }
+  .stagger > *:nth-child(3) {
+    animation-delay: 0.1s;
+  }
+  .stagger > *:nth-child(4) {
+    animation-delay: 0.14s;
+  }
+  .stagger > *:nth-child(5) {
+    animation-delay: 0.18s;
+  }
+  .stagger > *:nth-child(n + 6) {
+    animation-delay: 0.22s;
   }
 
   @keyframes jarvis-pulse {
