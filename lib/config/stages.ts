@@ -172,8 +172,8 @@ export const STATUSES: StatusDef[] = [
   },
   {
     id: "lost_retryable",
-    label: "Lost — can retry",
-    labelAr: "خسارة — يمكن المحاولة",
+    label: "Lost, can retry",
+    labelAr: "خسارة، يمكن المحاولة",
     hint: "Said no this time, but the door is still open.",
     hintAr: "رفض هذه المرة، لكن الباب ما زال مفتوحاً.",
     color: "var(--muted)",
@@ -182,8 +182,8 @@ export const STATUSES: StatusDef[] = [
   },
   {
     id: "dead",
-    label: "Dead — do not approach",
-    labelAr: "منتهٍ — ممنوع الاقتراب",
+    label: "Dead, do not approach",
+    labelAr: "منتهٍ، ممنوع الاقتراب",
     hint: "Finished permanently. Nobody goes back.",
     hintAr: "منتهٍ نهائياً. لا أحد يعود إليه.",
     color: "var(--critical)",
