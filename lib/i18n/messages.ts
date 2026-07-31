@@ -238,7 +238,7 @@ const en = {
   },
   calendar: {
     title: "Calendar",
-    subtitle: "Everything done, day by day. Hours and the week’s plan live under Schedule.",
+    subtitle: "Everything done, day by day. Tap any day to see it in full.",
     month: "Month",
     week: "Week",
     fieldDay: "Field day",
@@ -686,7 +686,7 @@ const ar: Messages = {
   },
   calendar: {
     title: "التقويم",
-    subtitle: "كل ما تم إنجازه، يوماً بيوم. الساعات وخطة الأسبوع في تبويب الجدول.",
+    subtitle: "كل ما تم إنجازه، يوماً بيوم. اضغط أي يوم لعرضه كاملاً.",
     month: "شهر",
     week: "أسبوع",
     fieldDay: "يوم ميداني",

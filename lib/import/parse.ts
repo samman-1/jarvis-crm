@@ -73,7 +73,7 @@ const PHONE_RE = /(?:\+?966|00966|0)?5\d{1}[\s-]?\d{3}[\s-]?\d{4}/;
 const MONEY_RE = /(?:sar|sr|ريال|﷼)?\s*([0-9][0-9,\.]{2,})\s*(?:sar|sr|ريال|k)?/i;
 
 /** "10:30", "10.30am", "at 9" — the time somebody actually went. */
-const TIME_RE = /(?:at\s*)?([01]?\d|2[0-3])[:.]([0-5]\d)\s*(am|pm)?|(?:at\s*)(1?\d)\s*(am|pm)/i;
+const TIME_RE = /\b(?:at\s*)?([01]?\d|2[0-3])[:.]([0-5]\d)\s*(am|pm)?\b|\b(?:at\s*)(1?\d)\s*(am|pm)\b/i;
 
 function readTime(line: string): string {
   const match = line.match(TIME_RE);
@@ -323,8 +323,14 @@ export function parseActivity(
     // An inline date applies to this line only.
     const inlineDate = headingDate ?? currentDate;
 
+    // Pull the time out first. Leaving it in wrecked the name match: the head
+    // is taken up to the first separator, and a colon is a separator, so
+    // "09:20 Barakah Logistics" matched a client called "09".
+    const time = readTime(stripped);
+    const withoutTime = time ? stripped.replace(TIME_RE, " ").trim() : stripped;
+
     // Match the client by the opening words, which is where the name sits.
-    const head = stripped.split(/[,\-–—:|]/)[0].trim();
+    const head = withoutTime.split(/[,\-–—:|]/)[0].trim();
     let matched = "";
     let best = 0;
     for (const c of clients) {
@@ -343,11 +349,11 @@ export function parseActivity(
       clientId: matched,
       clientGuess: head,
       type: guessType(stripped),
-      summary: stripped,
+      summary: withoutTime || stripped,
       date: inlineDate,
       // Blank when the line carries no time — the table shows an empty field
       // rather than inventing one.
-      time: readTime(stripped),
+      time,
       include: true,
       raw: line,
     });
