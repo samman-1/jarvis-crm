@@ -235,6 +235,23 @@ export interface MemberProfile {
   updatedAt: string;
 }
 
+/**
+ * One member asking the owner to let them onto a client.
+ *
+ * The warning used to name the owner and then offer a button that joined you
+ * anyway. That is advice, not a rule. Now the owner decides.
+ */
+export interface AccessRequest {
+  id: string;
+  clientId: string;
+  requesterId: string;
+  ownerId: string;
+  reason: string;
+  status: "pending" | "approved" | "declined";
+  decidedAt: string | null;
+  createdAt: string;
+}
+
 export interface AuditEntry {
   id: string;
   actorId: string;

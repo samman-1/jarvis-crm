@@ -1,4 +1,5 @@
 import type {
+  AccessRequest,
   Attendance,
   AuditEntry,
   Client,
@@ -55,6 +56,25 @@ export interface DataProvider {
     opts?: { reason?: string; revisitAfter?: string | null },
   ): Promise<Client>;
   addCollaborator(clientId: string, memberId: string): Promise<Client>;
+
+  /* --- Asking to join someone else's client ------------------------ */
+  /** Raise (or re-raise) a request. Returns it pending. */
+  requestAccess(
+    clientId: string,
+    requesterId: string,
+    reason: string,
+  ): Promise<AccessRequest>;
+  /** Requests waiting on this member's answer, plus their own outgoing ones. */
+  listAccessRequests(memberId: string): Promise<{
+    incoming: AccessRequest[];
+    outgoing: AccessRequest[];
+  }>;
+  /** Approving adds them as a collaborator; declining changes nothing. */
+  decideAccess(
+    requestId: string,
+    ownerId: string,
+    approve: boolean,
+  ): Promise<AccessRequest>;
 
   /** The collision check that stops two members chasing the same company. */
   findPotentialDuplicates(query: {

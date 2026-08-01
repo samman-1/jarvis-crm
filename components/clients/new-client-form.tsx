@@ -65,6 +65,8 @@ export function NewClientForm({ locale }: { locale: Locale }) {
   const [deadReason, setDeadReason] = useState("");
 
   const [dismissedWarning, setDismissedWarning] = useState(false);
+  const [asking, setAsking] = useState("");
+  const [asked, setAsked] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -86,9 +88,24 @@ export function NewClientForm({ locale }: { locale: Locale }) {
   const found = matches ?? [];
   const blocked = found.some((f) => f.level === "block") && !dismissedWarning;
 
-  async function addMeToExisting(clientId: string) {
-    await db().addCollaborator(clientId, user.id);
-    router.push(`/${locale}/clients/${clientId}`);
+  /**
+   * Ask the owner. Do not just take it.
+   *
+   * This used to call addCollaborator and drop you straight onto the client,
+   * which made the ownership warning a formality: it named the owner and then
+   * handed you the keys anyway. Now the owner decides, and until they do,
+   * nothing about the client changes.
+   */
+  async function askToJoin(clientId: string) {
+    setAsking(clientId);
+    try {
+      await db().requestAccess(clientId, user.id, "");
+      setAsked((prev) => [...prev, clientId]);
+    } catch {
+      setError(m.common.error);
+    } finally {
+      setAsking("");
+    }
   }
 
   async function submit(e: React.FormEvent) {
@@ -155,7 +172,9 @@ export function NewClientForm({ locale }: { locale: Locale }) {
       <DuplicateWarning
         matches={found}
         locale={locale}
-        onAddMe={addMeToExisting}
+        onAskToJoin={askToJoin}
+        askingId={asking}
+        askedIds={asked}
         onDismiss={() => setDismissedWarning(true)}
         dismissed={dismissedWarning}
       />

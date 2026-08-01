@@ -21,13 +21,19 @@ import { cn } from "@/lib/utils";
 export function DuplicateWarning({
   matches,
   locale,
-  onAddMe,
+  onAskToJoin,
+  askingId,
+  askedIds,
   onDismiss,
   dismissed,
 }: {
   matches: DuplicateMatch[];
   locale: string;
-  onAddMe?: (clientId: string) => void;
+  onAskToJoin?: (clientId: string) => void;
+  /** The client currently being asked about, so its button can show progress. */
+  askingId?: string;
+  /** Clients already asked about in this session. */
+  askedIds?: string[];
   onDismiss?: () => void;
   dismissed?: boolean;
 }) {
@@ -41,7 +47,9 @@ export function DuplicateWarning({
           key={match.client.id}
           match={match}
           locale={locale}
-          onAddMe={onAddMe}
+          onAskToJoin={onAskToJoin}
+          askingId={askingId}
+          askedIds={askedIds}
           onDismiss={onDismiss}
           m={m}
         />
@@ -53,13 +61,19 @@ export function DuplicateWarning({
 function MatchCard({
   match,
   locale,
-  onAddMe,
+  onAskToJoin,
+  askingId,
+  askedIds,
   onDismiss,
   m,
 }: {
   match: DuplicateMatch;
   locale: string;
-  onAddMe?: (clientId: string) => void;
+  onAskToJoin?: (clientId: string) => void;
+  /** The client currently being asked about, so its button can show progress. */
+  askingId?: string;
+  /** Clients already asked about in this session. */
+  askedIds?: string[];
   onDismiss?: () => void;
   m: ReturnType<typeof useI18n>["m"];
 }) {
@@ -212,14 +226,21 @@ function MatchCard({
             {m.duplicate.openClient}
           </Button>
         </Link>
-        {onAddMe ? (
-          <Button
-            size="sm"
-            variant="primary"
-            onClick={() => onAddMe(client.id)}
-          >
-            {m.duplicate.addMe}
-          </Button>
+        {onAskToJoin ? (
+          askedIds?.includes(client.id) ? (
+            <span className="inline-flex items-center rounded-md border border-success px-3 py-2 text-xs font-medium text-success">
+              {m.duplicate.asked}
+            </span>
+          ) : (
+            <Button
+              size="sm"
+              variant="primary"
+              disabled={askingId === client.id}
+              onClick={() => onAskToJoin(client.id)}
+            >
+              {askingId === client.id ? m.common.saving : m.duplicate.askToJoin}
+            </Button>
+          )
         ) : null}
         {onDismiss ? (
           <Button size="sm" variant="ghost" onClick={onDismiss}>

@@ -2,6 +2,7 @@ import { addDays, differenceInCalendarDays } from "date-fns";
 import type { DataProvider } from "@/lib/data/provider";
 import { SEED_VERSION, buildSeed, type SeedData } from "@/lib/data/seed";
 import type {
+  AccessRequest,
   Attendance,
   MemberProfile,
   Message,
@@ -74,6 +75,8 @@ const DUPLICATE_THRESHOLD = 0.72;
 export class MockProvider implements DataProvider {
   readonly mode = "mock" as const;
   private data: SeedData;
+  /** Access requests live for the session only; offline mode has one member. */
+  private access: AccessRequest[] = [];
 
   constructor() {
     this.data = this.load();
@@ -1235,6 +1238,54 @@ export class MockProvider implements DataProvider {
 
     this.touch();
     return { created };
+  }
+
+  async requestAccess(
+    clientId: string,
+    requesterId: string,
+    reason: string,
+  ): Promise<AccessRequest> {
+    const client = this.data.clients.find((c) => c.id === clientId)!;
+    const existing = this.access.find(
+      (r) => r.clientId === clientId && r.requesterId === requesterId,
+    );
+    if (existing) {
+      existing.status = "pending";
+      existing.reason = reason;
+      existing.decidedAt = null;
+      this.touch();
+      return existing;
+    }
+    const row: AccessRequest = {
+      id: uid("acc"), clientId, requesterId, ownerId: client.ownerId,
+      reason, status: "pending", decidedAt: null, createdAt: isoNow(),
+    };
+    this.access.push(row);
+    this.touch();
+    return row;
+  }
+
+  async listAccessRequests(memberId: string) {
+    return {
+      incoming: this.access.filter(
+        (r) => r.ownerId === memberId && r.status === "pending",
+      ),
+      outgoing: this.access.filter((r) => r.requesterId === memberId),
+    };
+  }
+
+  async decideAccess(
+    requestId: string,
+    ownerId: string,
+    approve: boolean,
+  ): Promise<AccessRequest> {
+    const row = this.access.find((r) => r.id === requestId)!;
+    if (row.ownerId !== ownerId) throw new Error("Not yours to decide.");
+    row.status = approve ? "approved" : "declined";
+    row.decidedAt = isoNow();
+    if (approve) await this.addCollaborator(row.clientId, row.requesterId);
+    this.touch();
+    return row;
   }
 
   async importTasks(

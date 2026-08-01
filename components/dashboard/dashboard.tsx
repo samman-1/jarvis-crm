@@ -30,6 +30,7 @@ import { ComingSoon } from "@/components/ui/coming-soon";
 import { ReminderBanner } from "@/components/reminders/reminders";
 import { TaskPanel } from "@/components/tasks/task-panel";
 import { QuickLog } from "@/components/clients/quick-log";
+import { AccessRequests } from "@/components/clients/access-requests";
 import {
   ASK_JARVIS_ENABLED,
   EFFICIENCY_ENABLED,
@@ -118,6 +119,9 @@ export function Dashboard({ locale }: { locale: Locale }) {
 
       {/* Anything due or nearly due interrupts before the numbers do. */}
       <ReminderBanner locale={locale} />
+
+      {/* Somebody is waiting on you to answer. That outranks your own week. */}
+      <AccessRequests clients={allClients.data ?? []} locale={locale} />
 
       {/* --- KPI strip ------------------------------------------------ */}
       {stats.loading || !s ? (

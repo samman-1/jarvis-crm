@@ -223,6 +223,16 @@ const en = {
     retryHint: "The door is still open, but check the history first.",
     onHoldTitle: "On hold",
     matchedPhone: "Matched on phone number",
+    askToJoin: "Ask to work on it",
+    asked: "Asked. Waiting on them.",
+  },
+  access: {
+    title: "Someone wants onto your client",
+    hint: "Nothing changes until you answer",
+    wantsToJoin: "wants to work on",
+    aClient: "one of your clients",
+    approve: "Approve",
+    decline: "Decline",
   },
   team: {
     title: "The team",
@@ -720,6 +730,16 @@ const ar: Messages = {
     retryHint: "الباب ما زال مفتوحاً، لكن راجع السجل أولاً.",
     onHoldTitle: "معلّق",
     matchedPhone: "تطابق في رقم الهاتف",
+    askToJoin: "اطلب العمل عليه",
+    asked: "تم الطلب. بانتظار ردّه.",
+  },
+  access: {
+    title: "أحدهم يريد العمل على عميلك",
+    hint: "لا يتغيّر شيء حتى تردّ",
+    wantsToJoin: "يريد العمل على",
+    aClient: "أحد عملائك",
+    approve: "موافقة",
+    decline: "رفض",
   },
   team: {
     title: "الفريق",

@@ -1,5 +1,6 @@
 import type { DataProvider } from "@/lib/data/provider";
 import type {
+  AccessRequest,
   Attendance,
   AuditEntry,
   Client,
@@ -255,6 +256,17 @@ export class SupabaseProvider implements DataProvider {
   importActivity(rows: ParsedActivityRow[], memberId: string) {
     return call<{ created: number }>("importActivity", [rows, memberId]);
   }
+  requestAccess(clientId: string, requesterId: string, reason: string) {
+    return call<AccessRequest>("requestAccess", [clientId, requesterId, reason]);
+  }
+  listAccessRequests(memberId: string) {
+    return call<{ incoming: AccessRequest[]; outgoing: AccessRequest[] }>(
+      "listAccessRequests", [memberId]);
+  }
+  decideAccess(requestId: string, ownerId: string, approve: boolean) {
+    return call<AccessRequest>("decideAccess", [requestId, ownerId, approve]);
+  }
+
   importTasks(rows: ParsedTaskRow[], assigneeId: string) {
     return call<{ created: number }>("importTasks", [rows, assigneeId]);
   }

@@ -3,6 +3,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { addDays, differenceInCalendarDays } from "date-fns";
 import type { DataProvider } from "@/lib/data/provider";
 import type {
+  AccessRequest,
   Attendance,
   AuditEntry,
   Client,
@@ -1234,6 +1235,101 @@ export class SupabaseServerProvider implements DataProvider {
       created++;
     }
     return { created };
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Asking to join someone else's client
+   * ---------------------------------------------------------------- */
+
+  async requestAccess(
+    clientId: string,
+    requesterId: string,
+    reason: string,
+  ): Promise<AccessRequest> {
+    const client = await this.getClientRaw(clientId);
+    if (client.ownerId === requesterId) {
+      throw new Error("You already own this client.");
+    }
+
+    // One row per person per client: asking again reopens the same request
+    // rather than stacking copies on the owner's screen.
+    const row = {
+      id: uid("acc"),
+      client_id: clientId,
+      requester_id: requesterId,
+      owner_id: client.ownerId,
+      reason: reason.trim(),
+      status: "pending",
+      decided_at: null,
+      created_at: isoNow(),
+    };
+    const { data, error } = await this.sb
+      .from("client_access_requests")
+      .upsert(row, { onConflict: "client_id,requester_id" })
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return fromRow<AccessRequest>(data);
+  }
+
+  async listAccessRequests(
+    memberId: string,
+  ): Promise<{ incoming: AccessRequest[]; outgoing: AccessRequest[] }> {
+    const { data, error } = await this.sb
+      .from("client_access_requests")
+      .select("*")
+      .or(`owner_id.eq.${memberId},requester_id.eq.${memberId}`)
+      .order("created_at", { ascending: false });
+    // A missing table must not take the whole app down with it.
+    if (error) return { incoming: [], outgoing: [] };
+
+    const all = fromRows<AccessRequest>(data);
+    return {
+      incoming: all.filter(
+        (r) => r.ownerId === memberId && r.status === "pending",
+      ),
+      outgoing: all.filter((r) => r.requesterId === memberId),
+    };
+  }
+
+  async decideAccess(
+    requestId: string,
+    ownerId: string,
+    approve: boolean,
+  ): Promise<AccessRequest> {
+    const { data: found } = await this.sb
+      .from("client_access_requests")
+      .select("*")
+      .eq("id", requestId)
+      .maybeSingle();
+    const request = fromRow<AccessRequest>(found);
+    if (!request) throw new Error("That request no longer exists.");
+    // Only the owner answers, and the id comes from the session, never the
+    // request body.
+    if (request.ownerId !== ownerId) throw new Error("Not yours to decide.");
+
+    const { data, error } = await this.sb
+      .from("client_access_requests")
+      .update({
+        status: approve ? "approved" : "declined",
+        decided_at: isoNow(),
+      })
+      .eq("id", requestId)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+
+    if (approve) {
+      await this.addCollaborator(request.clientId, request.requesterId);
+    }
+    await this.audit(
+      ownerId,
+      request.clientId,
+      approve ? "access_approved" : "access_declined",
+      "",
+      request.requesterId,
+    );
+    return fromRow<AccessRequest>(data);
   }
 
   async importTasks(
