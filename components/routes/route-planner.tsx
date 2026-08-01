@@ -17,6 +17,7 @@ import {
   Skeleton,
 } from "@/components/ui/primitives";
 import { StageChip } from "@/components/ui/badges";
+import { memberLabel } from "@/lib/config/members";
 import { PageHeader } from "@/components/shell/page-header";
 import type { ClientRow, DayRoute, RouteStop } from "@/lib/types";
 import type { Locale } from "@/lib/i18n/config";
@@ -113,6 +114,8 @@ export function RoutePlanner({ locale }: { locale: Locale }) {
             expanded={openId === route.id}
             onToggle={() => setOpenId(openId === route.id ? "" : route.id)}
             onChanged={routes.reload}
+            memberId={user.id}
+            onClientCreated={clients.reload}
             m={m}
           />
         ))
@@ -130,6 +133,8 @@ function RouteCard({
   expanded,
   onToggle,
   onChanged,
+  memberId,
+  onClientCreated,
   m,
 }: {
   route: DayRoute;
@@ -138,6 +143,8 @@ function RouteCard({
   expanded: boolean;
   onToggle: () => void;
   onChanged: () => void;
+  memberId: string;
+  onClientCreated: () => void;
   m: ReturnType<typeof useI18n>["m"];
 }) {
   const [adding, setAdding] = useState("");
@@ -155,13 +162,19 @@ function RouteCard({
     return locale === "ar" && c.nameAr ? c.nameAr : c.name;
   };
 
+  /** What to show for a stop, client-backed or not. */
+  const stopName = (stop: RouteStop) =>
+    stop.clientId ? nameOf(stop.clientId) : (stop.label ?? "");
+
   /** What Google Maps should search for: an address if we have one, else the
    *  company name plus its city, which finds most businesses. */
   const queryFor = (stop: RouteStop) => {
     if (stop.addressOverride.trim()) return stop.addressOverride.trim();
     const c = byId.get(stop.clientId);
-    if (!c) return "";
-    return [c.address, c.name, c.city].filter(Boolean).join(", ");
+    if (c) return [c.address, c.name, c.city].filter(Boolean).join(", ");
+    // No client behind it is fine: the label is the search, which is how
+    // anyone would look the place up in Maps anyway.
+    return (stop.label ?? "").trim();
   };
 
   const mappable = route.stops.filter((s) => queryFor(s));
@@ -229,6 +242,44 @@ function RouteCard({
     setAdding("");
   }
 
+  /** Somewhere worth going that is not a client and does not need to be. */
+  async function addPlainStop(label: string) {
+    const name = label.trim();
+    if (!name) return;
+    await patchStops([
+      ...route.stops,
+      { clientId: "", label: name, addressOverride: "", note: "", done: false },
+    ]);
+  }
+
+  /**
+   * Put it on the day and claim it at the same time.
+   *
+   * This is the point of the whole system: the moment a company is on your
+   * route it is yours, so the other two get the "already owned by" warning
+   * instead of driving out to the same door next week. Making that a separate
+   * trip to the new-client form is how it gets skipped.
+   */
+  async function createClientStop(name: string, city: string) {
+    const created = await db().createClient(
+      {
+        name: name.trim(),
+        city: city.trim(),
+        stage: "lead",
+        status: "active",
+        ownerId: memberId,
+        broughtById: memberId,
+        source: "Route planning",
+      },
+      memberId,
+    );
+    await patchStops([
+      ...route.stops,
+      { clientId: created.id, addressOverride: "", note: "", done: false },
+    ]);
+    onClientCreated();
+  }
+
   function move(index: number, by: number) {
     const next = [...route.stops];
     const target = index + by;
@@ -255,6 +306,36 @@ function RouteCard({
   const available = clients.filter(
     (c) => c.status !== "dead" && !route.stops.some((s) => s.clientId === c.id),
   );
+
+  /*
+   * The city everything else on this day is in.
+   *
+   * A stop with no city is the difference between a map of Riyadh and a map
+   * of the planet: Google cannot place "the industrial estate off Exit 18" on
+   * its own, zooms out to the whole world, and the map becomes useless. So a
+   * new stop inherits the day's city, and you only change it when it differs.
+   */
+  const defaultCity = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const stop of route.stops) {
+      const city = byId.get(stop.clientId)?.city?.trim();
+      if (city) counts.set(city, (counts.get(city) ?? 0) + 1);
+    }
+    if (counts.size === 0) {
+      for (const c of clients) {
+        if (c.city.trim()) counts.set(c.city, (counts.get(c.city) ?? 0) + 1);
+      }
+    }
+    let best = "";
+    let top = 0;
+    for (const [city, n] of counts) {
+      if (n > top) {
+        top = n;
+        best = city;
+      }
+    }
+    return best;
+  }, [route.stops, byId, clients]);
 
   return (
     <Card>
@@ -288,7 +369,7 @@ function RouteCard({
                 const client = byId.get(stop.clientId);
                 return (
                   <li
-                    key={stop.clientId}
+                    key={stop.clientId || `plain-${i}`}
                     className={cn(
                       "rounded-md border border-border bg-surface-2 p-3",
                       stop.done && "opacity-60",
@@ -316,18 +397,34 @@ function RouteCard({
                       </button>
 
                       <div className="min-w-0 flex-1">
-                        <Link
-                          href={`/${locale}/clients/${stop.clientId}`}
-                          className={cn(
-                            "block text-sm font-medium hover:text-accent",
-                            stop.done && "line-through",
-                          )}
-                        >
-                          {nameOf(stop.clientId)}
-                        </Link>
+                        {stop.clientId ? (
+                          <Link
+                            href={`/${locale}/clients/${stop.clientId}`}
+                            className={cn(
+                              "block text-sm font-medium hover:text-accent",
+                              stop.done && "line-through",
+                            )}
+                          >
+                            {stopName(stop)}
+                          </Link>
+                        ) : (
+                          <span
+                            className={cn(
+                              "block text-sm font-medium",
+                              stop.done && "line-through",
+                            )}
+                          >
+                            {stopName(stop)}
+                          </span>
+                        )}
                         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-faint">
                           {client ? <StageChip stage={client.stage} /> : null}
                           {client?.city ? <span>{client.city}</span> : null}
+                          {!stop.clientId ? (
+                            <span className="rounded-full border border-border px-1.5 py-0.5 text-[10px]">
+                              {m.routes.notAClient}
+                            </span>
+                          ) : null}
                         </div>
                       </div>
 
@@ -405,23 +502,16 @@ function RouteCard({
           )}
 
           {/* --- Add a stop ------------------------------------------- */}
-          <Select
-            value={adding}
-            onChange={(e) => {
-              setAdding(e.target.value);
-              void addStop(e.target.value);
-            }}
-            className="h-11"
-            aria-label={m.routes.addStop}
-          >
-            <option value="">+ {m.routes.addStop}</option>
-            {available.map((c) => (
-              <option key={c.id} value={c.id}>
-                {locale === "ar" && c.nameAr ? c.nameAr : c.name}
-                {c.city ? `, ${c.city}` : ""}
-              </option>
-            ))}
-          </Select>
+          <AddStop
+            available={available}
+            allClients={clients}
+            defaultCity={defaultCity}
+            locale={locale}
+            m={m}
+            onPickClient={addStop}
+            onAddPlain={addPlainStop}
+            onCreateClient={createClientStop}
+          />
 
           {/* The map is a choice, not the way routes work. Off by default,
               because a list of names is a perfectly good plan and loading a
@@ -449,7 +539,10 @@ function RouteCard({
                     src={embedUrl}
                     title={m.routes.mapTitle}
                     className="block h-64 w-full border-0 sm:h-80"
-                    loading="lazy"
+                    // Deliberately NOT loading="lazy". The frame only exists
+                    // once you have asked for the map, and lazy meant it sat
+                    // blank whenever it opened below the fold, which on a
+                    // phone is most of the time.
                     referrerPolicy="no-referrer-when-downgrade"
                   />
                 </div>
@@ -477,7 +570,7 @@ function RouteCard({
               size="sm"
               onClick={async () => {
                 const text = route.stops
-                  .map((s, i) => `${i + 1}. ${nameOf(s.clientId)}${
+                  .map((s, i) => `${i + 1}. ${stopName(s)}${
                     byId.get(s.clientId)?.city
                       ? `, ${byId.get(s.clientId)!.city}`
                       : ""
@@ -510,5 +603,227 @@ function RouteCard({
         </div>
       ) : null}
     </Card>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+
+/**
+ * Adding somewhere to the day.
+ *
+ * The old version was a dropdown of your own clients, which meant a company
+ * you had not entered yet could not go on a route at all — so you planned the
+ * day in your head instead, and nobody else ever learned you were going.
+ *
+ * Type a name and it offers whatever fits:
+ *   · one of the companies already in the system, yours or anyone's
+ *   · a new client, created and owned by you on the spot
+ *   · a plain stop, for a place that is not a company you are selling to
+ *
+ * The collision warning is the important part. If one of the others already
+ * owns that name it says so before you add it, because two people arriving at
+ * the same door in one week is the exact thing this system exists to stop.
+ */
+function AddStop({
+  available,
+  allClients,
+  defaultCity,
+  locale,
+  m,
+  onPickClient,
+  onAddPlain,
+  onCreateClient,
+}: {
+  available: ClientRow[];
+  allClients: ClientRow[];
+  /** Prefilled so a new stop lands in the right city without being typed. */
+  defaultCity: string;
+  locale: Locale;
+  m: ReturnType<typeof useI18n>["m"];
+  onPickClient: (id: string) => Promise<void>;
+  onAddPlain: (label: string) => Promise<void>;
+  onCreateClient: (name: string, city: string) => Promise<void>;
+}) {
+  const { user } = useSession();
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [city, setCity] = useState(defaultCity);
+  const [busy, setBusy] = useState(false);
+
+  const q = query.trim().toLowerCase();
+
+  const matches = useMemo(() => {
+    if (!q) return available.slice(0, 6);
+    return available
+      .filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.nameAr.includes(query.trim()) ||
+          c.city.toLowerCase().includes(q),
+      )
+      .slice(0, 6);
+  }, [available, q, query]);
+
+  /* Anyone else's client with this name, including ones closed for good. The
+     dead list matters most here: that is a wasted morning. */
+  const clash = useMemo(() => {
+    if (q.length < 3) return null;
+    return (
+      allClients.find(
+        (c) =>
+          c.ownerId !== user.id &&
+          !c.collaboratorIds.includes(user.id) &&
+          c.name.toLowerCase().includes(q),
+      ) ?? null
+    );
+  }, [allClients, q, user.id]);
+
+  async function run(fn: () => Promise<void>) {
+    setBusy(true);
+    try {
+      await fn();
+      setQuery("");
+      setCity(defaultCity);
+      setOpen(false);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <Button
+        variant="secondary"
+        className="w-full"
+        onClick={() => {
+          // Read the day's city here, not in useState. The picker mounts
+          // while the route is still empty, so the initial value is always
+          // blank and never catches up on its own.
+          setCity(defaultCity);
+          setOpen(true);
+        }}
+      >
+        + {m.routes.addStop}
+      </Button>
+    );
+  }
+
+  return (
+    <div className="animate-enter space-y-2.5 rounded-md border border-border bg-surface-2 p-3">
+      <Input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder={m.routes.searchOrType}
+        aria-label={m.routes.searchOrType}
+        className="h-11"
+        autoFocus
+      />
+
+      {clash ? (
+        <div
+          className={cn(
+            "rounded-md border p-2.5 text-xs leading-relaxed",
+            clash.status === "dead"
+              ? "border-critical bg-critical-soft"
+              : "border-warn bg-warn-soft",
+          )}
+        >
+          {clash.status === "dead" ? (
+            <>
+              <strong>⛔ {clash.name}</strong> {m.duplicate.deadBy}{" "}
+              <strong>{memberLabel(clash.closedById)}</strong>.{" "}
+              {clash.closedReason}
+            </>
+          ) : (
+            <>
+              <strong>{clash.name}</strong> {m.duplicate.ownedBy}{" "}
+              <strong>{memberLabel(clash.ownerId)}</strong>.{" "}
+              {m.routes.askThemFirst}
+            </>
+          )}
+        </div>
+      ) : null}
+
+      {matches.length > 0 ? (
+        <ul className="space-y-1">
+          {matches.map((c) => (
+            <li key={c.id}>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void run(() => onPickClient(c.id))}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-start text-sm transition-colors hover:bg-surface-3 disabled:opacity-50"
+              >
+                <span className="min-w-0 flex-1 truncate">
+                  {locale === "ar" && c.nameAr ? c.nameAr : c.name}
+                </span>
+                {c.city ? (
+                  <span className="shrink-0 text-[11px] text-faint">
+                    {c.city}
+                  </span>
+                ) : null}
+                {c.ownerId !== user.id ? (
+                  <span className="shrink-0 text-[11px] text-warn">
+                    {memberLabel(c.ownerId)}
+                  </span>
+                ) : null}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {/* Nothing matched, so decide what this name is. */}
+      {q.length >= 2 && !matches.some((c) => c.name.toLowerCase() === q) ? (
+        <div className="space-y-2 border-t border-border pt-2.5">
+          <p className="text-[11px] text-faint">{m.routes.notInSystem}</p>
+          <Input
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            placeholder={m.newClient.city}
+            aria-label={m.newClient.city}
+            className="h-10 text-xs"
+          />
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Button
+              variant="primary"
+              size="sm"
+              disabled={busy}
+              onClick={() => void run(() => onCreateClient(query, city))}
+            >
+              {busy ? m.common.saving : m.routes.addAsClient}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={busy}
+              onClick={() =>
+                void run(() =>
+                  onAddPlain(city.trim() ? `${query.trim()}, ${city.trim()}` : query),
+                )
+              }
+            >
+              {m.routes.addAsPlain}
+            </Button>
+          </div>
+          <p className="text-[11px] leading-relaxed text-faint">
+            {m.routes.addAsClientHint}
+          </p>
+        </div>
+      ) : null}
+
+      <Button
+        variant="ghost"
+        size="sm"
+        className="w-full"
+        onClick={() => {
+          setOpen(false);
+          setQuery("");
+          setCity(defaultCity);
+        }}
+      >
+        {m.common.cancel}
+      </Button>
+    </div>
   );
 }

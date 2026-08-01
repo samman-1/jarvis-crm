@@ -67,7 +67,9 @@ export function RouteToday({ locale }: { locale: Locale }) {
       .map((s) => {
         if (s.addressOverride.trim()) return s.addressOverride.trim();
         const c = byId.get(s.clientId);
-        return c ? [c.address, c.name, c.city].filter(Boolean).join(", ") : "";
+        if (c) return [c.address, c.name, c.city].filter(Boolean).join(", ");
+        // Stops with no client behind them still map: the label is the search.
+        return (s.label ?? "").trim();
       })
       .filter(Boolean)
       .map(encodeURIComponent);
@@ -104,7 +106,10 @@ export function RouteToday({ locale }: { locale: Locale }) {
             {route.stops.map((stop, i) => {
               const client = byId.get(stop.clientId);
               return (
-                <li key={stop.clientId} className="flex items-center gap-2.5">
+                <li
+                  key={stop.clientId || `plain-${i}`}
+                  className="flex items-center gap-2.5"
+                >
                   <button
                     type="button"
                     aria-label={m.routes.markVisited}
@@ -125,19 +130,30 @@ export function RouteToday({ locale }: { locale: Locale }) {
                   >
                     {stop.done ? "✓" : i + 1}
                   </button>
-                  <Link
-                    href={`/${locale}/clients/${stop.clientId}`}
-                    className={cn(
-                      "min-w-0 flex-1 truncate text-sm hover:text-accent",
-                      stop.done && "text-faint line-through",
-                    )}
-                  >
-                    {client
-                      ? locale === "ar" && client.nameAr
-                        ? client.nameAr
-                        : client.name
-                      : ""}
-                  </Link>
+                  {stop.clientId ? (
+                    <Link
+                      href={`/${locale}/clients/${stop.clientId}`}
+                      className={cn(
+                        "min-w-0 flex-1 truncate text-sm hover:text-accent",
+                        stop.done && "text-faint line-through",
+                      )}
+                    >
+                      {client
+                        ? locale === "ar" && client.nameAr
+                          ? client.nameAr
+                          : client.name
+                        : ""}
+                    </Link>
+                  ) : (
+                    <span
+                      className={cn(
+                        "min-w-0 flex-1 truncate text-sm",
+                        stop.done && "text-faint line-through",
+                      )}
+                    >
+                      {stop.label ?? ""}
+                    </span>
+                  )}
                   {client?.city ? (
                     <span className="shrink-0 text-[11px] text-faint">
                       {client.city}

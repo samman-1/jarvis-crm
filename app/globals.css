@@ -373,6 +373,97 @@
     }
   }
 
+  /* ---------------------------------------------------------------- *
+   * The circuit
+   *
+   * The drifting light alone reads as a slow fade. This is the part you
+   * can actually watch: current running along the traces, and the
+   * junctions lighting as it passes. Same idea as the client portal.
+   *
+   * Every line shares one dash pattern and differs only in delay, so
+   * the whole board pulses in sequence instead of in unison.
+   * ---------------------------------------------------------------- */
+  .jarvis-circuit {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.9;
+  }
+  .jarvis-circuit path {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    opacity: 0.45;
+    /* A long pulse with a long gap: current running the trace, not a
+       dotted line. */
+    stroke-dasharray: 90 300;
+  }
+  .jarvis-circuit circle {
+    fill: var(--accent);
+    opacity: 0.35;
+  }
+  .jarvis-circuit .trace-dim {
+    stroke: var(--info);
+    opacity: 0.35;
+  }
+  .jarvis-circuit .node-dim {
+    fill: var(--info);
+  }
+
+  @keyframes jarvis-flow {
+    from {
+      stroke-dashoffset: 390;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes jarvis-node {
+    0%,
+    100% {
+      opacity: 0.2;
+      r: 2;
+    }
+    50% {
+      opacity: 0.85;
+      r: 3.2;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .jarvis-circuit path {
+      animation: jarvis-flow 14s linear infinite;
+    }
+    .jarvis-circuit path:nth-of-type(2) {
+      animation-duration: 19s;
+      animation-delay: -4s;
+    }
+    .jarvis-circuit path:nth-of-type(3) {
+      animation-duration: 23s;
+      animation-delay: -9s;
+    }
+    .jarvis-circuit path:nth-of-type(4) {
+      animation-duration: 17s;
+      animation-delay: -13s;
+    }
+    .jarvis-circuit path:nth-of-type(5) {
+      animation-duration: 26s;
+      animation-delay: -6s;
+    }
+    .jarvis-circuit circle {
+      animation: jarvis-node 9s ease-in-out infinite;
+    }
+    .jarvis-circuit circle:nth-of-type(2n) {
+      animation-delay: -3s;
+    }
+    .jarvis-circuit circle:nth-of-type(3n) {
+      animation-delay: -6s;
+      animation-duration: 11s;
+    }
+  }
+
   /* Motion is opt-in: a device asking for less gets the same layout,
      lit the same way, simply standing still. */
   @media (prefers-reduced-motion: no-preference) {

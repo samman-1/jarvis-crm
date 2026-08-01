@@ -177,7 +177,16 @@ export type ReminderUrgency = "overdue" | "today" | "soon" | "later";
  * addresses it can also hand the whole run to Google Maps.
  */
 export interface RouteStop {
+  /** Empty for a stop that is not a client in the system. */
   clientId: string;
+  /**
+   * What to call a stop with no client behind it.
+   *
+   * Routes get planned before the paperwork exists: "the industrial estate
+   * off Exit 18", a company spotted yesterday, somewhere worth a look. Those
+   * belong on the day without forcing a client record into being first.
+   */
+  label?: string;
   /** Free text overriding the client's own address for this trip. */
   addressOverride: string;
   note: string;

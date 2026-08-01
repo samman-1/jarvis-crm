@@ -261,6 +261,41 @@ function JarvisBackground() {
       <span className="orb-b" />
       <span className="orb-c" />
       <span className="sweep" />
+
+      {/*
+       * Current running through the board. "slice" keeps the drawing in
+       * proportion and crops it to fit, so the traces stay long lines on a
+       * phone instead of being squashed into specks.
+       */}
+      <svg
+        className="jarvis-circuit"
+        viewBox="0 0 1440 900"
+        preserveAspectRatio="xMidYMid slice"
+      >
+        <path d="M-20 140 H320 L400 220 H760 L840 140 H1180 L1260 220 H1460" />
+        <path
+          className="trace-dim"
+          d="M-20 380 H180 L260 300 H620 L700 380 H1040 L1120 300 H1460"
+        />
+        <path d="M-20 620 H420 L500 540 H900 L980 620 H1460" />
+        <path
+          className="trace-dim"
+          d="M-20 780 H260 L340 700 H700 L780 780 H1180 L1260 700 H1460"
+        />
+        <path d="M220 -20 V180 L300 260 V520 L220 600 V920" />
+
+        <circle cx="320" cy="140" r="2" />
+        <circle className="node-dim" cx="760" cy="220" r="2" />
+        <circle cx="1180" cy="140" r="2" />
+        <circle className="node-dim" cx="260" cy="300" r="2" />
+        <circle cx="620" cy="300" r="2" />
+        <circle className="node-dim" cx="1120" cy="300" r="2" />
+        <circle cx="420" cy="620" r="2" />
+        <circle className="node-dim" cx="900" cy="540" r="2" />
+        <circle cx="340" cy="700" r="2" />
+        <circle className="node-dim" cx="1180" cy="780" r="2" />
+        <circle cx="300" cy="260" r="2" />
+      </svg>
     </div>
   );
 }
