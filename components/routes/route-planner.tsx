@@ -166,12 +166,18 @@ function RouteCard({
   const stopName = (stop: RouteStop) =>
     stop.clientId ? nameOf(stop.clientId) : (stop.label ?? "");
 
-  /** What Google Maps should search for: an address if we have one, else the
-   *  company name plus its city, which finds most businesses. */
+  /**
+   * What Google Maps should search for.
+   *
+   * The company field holds the official name where we have one, and that is
+   * what Maps can actually find: our own shorthand ("Sabqoon") geocodes to
+   * nothing, and one unfindable stop makes Google give up on the whole route
+   * and draw the entire planet.
+   */
   const queryFor = (stop: RouteStop) => {
     if (stop.addressOverride.trim()) return stop.addressOverride.trim();
     const c = byId.get(stop.clientId);
-    if (c) return [c.address, c.name, c.city].filter(Boolean).join(", ");
+    if (c) return [c.address, c.company || c.name, c.city].filter(Boolean).join(", ");
     // No client behind it is fine: the label is the search, which is how
     // anyone would look the place up in Maps anyway.
     return (stop.label ?? "").trim();

@@ -67,7 +67,7 @@ export function RouteToday({ locale }: { locale: Locale }) {
       .map((s) => {
         if (s.addressOverride.trim()) return s.addressOverride.trim();
         const c = byId.get(s.clientId);
-        if (c) return [c.address, c.name, c.city].filter(Boolean).join(", ");
+        if (c) return [c.address, c.company || c.name, c.city].filter(Boolean).join(", ");
         // Stops with no client behind them still map: the label is the search.
         return (s.label ?? "").trim();
       })
