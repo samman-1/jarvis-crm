@@ -6,6 +6,7 @@ import { useI18n } from "@/components/providers/i18n-provider";
 import { useSession } from "@/components/providers/session-provider";
 import { Button, Textarea } from "@/components/ui/primitives";
 import type { Locale } from "@/lib/i18n/config";
+import { ASK_JARVIS_ENABLED } from "@/lib/efficiency";
 import { cn } from "@/lib/utils";
 
 /**
@@ -117,6 +118,11 @@ export function AskJarvis({ locale }: { locale: Locale }) {
       setBusy(false);
     }
   }
+
+  // Switched off at the source rather than hidden with CSS: no button, no
+  // stored conversation, no request. The dashboard shows a "coming soon"
+  // panel in its place so the team knows the space is reserved.
+  if (!ASK_JARVIS_ENABLED) return null;
 
   return (
     <>

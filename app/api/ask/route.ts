@@ -4,6 +4,7 @@ import { buildSnapshot } from "@/lib/ai/snapshot";
 import { getMember } from "@/lib/config/members";
 import { SESSION_COOKIE, verifySession } from "@/lib/auth/session";
 import { BRAND } from "@/lib/config/brand";
+import { ASK_JARVIS_ENABLED } from "@/lib/efficiency";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -59,6 +60,12 @@ export async function POST(request: Request) {
   const session = await verifySession(store.get(SESSION_COOKIE)?.value);
   if (!session) {
     return NextResponse.json({ error: "not_signed_in" }, { status: 401 });
+  }
+
+  // The switch is honoured on the server too, so turning it off really does
+  // stop the spending rather than only hiding the button.
+  if (!ASK_JARVIS_ENABLED) {
+    return NextResponse.json({ error: "disabled" }, { status: 503 });
   }
 
   const apiKey = process.env.OPENAI_API_KEY;

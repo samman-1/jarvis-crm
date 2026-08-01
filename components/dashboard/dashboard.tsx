@@ -31,6 +31,7 @@ import { ReminderBanner } from "@/components/reminders/reminders";
 import { TaskPanel } from "@/components/tasks/task-panel";
 import { QuickLog } from "@/components/clients/quick-log";
 import {
+  ASK_JARVIS_ENABLED,
   EFFICIENCY_ENABLED,
   HOURS_ENABLED,
   breakdownBars,
@@ -449,6 +450,10 @@ export function Dashboard({ locale }: { locale: Locale }) {
               <ComingSoon />
               <ComingSoon title={m.hours.title} note={m.hours.offBody} />
             </>
+          )}
+
+          {ASK_JARVIS_ENABLED ? null : (
+            <ComingSoon title={m.ask.title} note={m.ask.offBody} />
           )}
 
         </div>

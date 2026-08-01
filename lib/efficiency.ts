@@ -43,6 +43,19 @@ export const EFFICIENCY_ENABLED = false;
  */
 export const HOURS_ENABLED = false;
 
+/**
+ * Ask Jarvis is parked too.
+ *
+ * It is built and tested, but it costs money per question and depends on an
+ * OpenAI key that is not in the deployment yet. Rather than leave a button
+ * that answers "not switched on" every time it is pressed, the whole thing
+ * sits behind the same "coming soon" panel as the score.
+ *
+ * Flip this to true once OPENAI_API_KEY is set in Vercel; nothing else needs
+ * changing, and the API route refuses to run while it is false.
+ */
+export const ASK_JARVIS_ENABLED = false;
+
 export const WEIGHTS = {
   /** Did you actually cover the 09:00–14:00 window on the three field days? */
   attendance: 30,

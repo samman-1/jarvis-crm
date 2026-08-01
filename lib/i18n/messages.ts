@@ -407,6 +407,8 @@ const en = {
     failed: "Could not get an answer. Try again in a moment.",
     notConfigured:
       "Ask Jarvis is not switched on yet. It needs an OpenAI key added to the deployment.",
+    offBody:
+      "Parked for now. It works, but it costs money for every question, so it stays off until we decide it earns that.",
   },
   chat: {
     title: "Chat",
@@ -897,6 +899,8 @@ const ar: Messages = {
     ],
     failed: "تعذّر الحصول على إجابة. حاول بعد قليل.",
     notConfigured: "اسأل جارفس غير مفعّل بعد. يحتاج إلى مفتاح OpenAI في النشر.",
+    offBody:
+      "متوقف حالياً. يعمل، لكنه يكلّف مبلغاً عن كل سؤال، فيبقى مغلقاً حتى نقرر أنه يستحق ذلك.",
   },
   chat: {
     title: "المحادثة",
