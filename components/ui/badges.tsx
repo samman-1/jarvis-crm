@@ -9,6 +9,8 @@ import {
   interactionTypeDef,
   stageDef,
   statusDef,
+  contactMethodDef,
+  type ContactMethod,
 } from "@/lib/config/stages";
 import { PUBLIC_MEMBERS } from "@/lib/config/members";
 import { cn } from "@/lib/utils";
@@ -141,6 +143,32 @@ export function FreshnessChip({
         : locale === "ar"
           ? `${days} ${m.common.days}`
           : `${days}d`}
+    </span>
+  );
+}
+
+/**
+ * How we reached them, next to where they are in the pipeline.
+ *
+ * Stage says "contacted" for a company you emailed and for one whose owner
+ * sat with you for half an hour. This is the difference.
+ */
+export function ContactMethodChip({
+  method,
+  locale = "en",
+}: {
+  method: ContactMethod;
+  locale?: "en" | "ar";
+}) {
+  const def = contactMethodDef(method);
+  if (!def) return null;
+  return (
+    <span
+      className="inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
+      style={{ color: def.color, backgroundColor: def.soft }}
+      title={locale === "ar" ? def.hintAr : def.hint}
+    >
+      {locale === "ar" ? def.labelAr : def.label}
     </span>
   );
 }

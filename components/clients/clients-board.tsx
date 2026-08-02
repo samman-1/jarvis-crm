@@ -15,6 +15,7 @@ import {
   Skeleton,
 } from "@/components/ui/primitives";
 import {
+  ContactMethodChip,
   FreshnessChip,
   MemberBadge,
   StageChip,
@@ -333,7 +334,10 @@ function ClientTable({ rows, locale }: { rows: ClientRow[]; locale: Locale }) {
                   </Link>
                 </td>
                 <td className="px-3 py-3">
-                  <StageChip stage={c.stage} />
+                  <div className="flex flex-col items-start gap-1">
+                    <StageChip stage={c.stage} />
+                    <ContactMethodChip method={c.contactMethod} locale={locale} />
+                  </div>
                 </td>
                 <td className="px-3 py-3">
                   <StatusChip status={c.status} compact />

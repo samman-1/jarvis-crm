@@ -17,6 +17,7 @@ import {
   Stat,
 } from "@/components/ui/primitives";
 import {
+  ContactMethodChip,
   FreshnessChip,
   InteractionIcon,
   InteractionLabel,
@@ -103,6 +104,20 @@ export function Dashboard({ locale }: { locale: Locale }) {
     });
   }, [clients.data]);
 
+  /* Every tile on the strip, straight from the rows on this page. */
+  const counts = useMemo(() => {
+    const all = clients.data ?? [];
+    const open = (tasks.data ?? []).filter((t) => t.status === "open");
+    return {
+      total: all.length,
+      active: all.filter((c) => c.status === "active").length,
+      leads: all.filter((c) => c.stage === "lead" && c.status !== "dead").length,
+      dead: all.filter((c) => c.status === "dead").length,
+      won: all.filter((c) => c.stage === "won").length,
+      tasks: open.length,
+    };
+  }, [clients.data, tasks.data]);
+
   /* The subset that has actually gone quiet. Kept separate from the list
      above so it reads as a to-do, not as a second copy of the same names. */
   const goingCold = useMemo(
@@ -123,8 +138,12 @@ export function Dashboard({ locale }: { locale: Locale }) {
       {/* Somebody is waiting on you to answer. That outranks your own week. */}
       <AccessRequests clients={allClients.data ?? []} locale={locale} />
 
-      {/* --- KPI strip ------------------------------------------------ */}
-      {stats.loading || !s ? (
+      {/* --- KPI strip ------------------------------------------------
+          Counted from the client list already on this page rather than from
+          a range query, so every tile moves the moment you add, kill or
+          finish something. Nothing here is scoped to "this week": these are
+          the totals for your book. */}
+      {clients.loading ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-20" />
@@ -132,28 +151,28 @@ export function Dashboard({ locale }: { locale: Locale }) {
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          <Stat label={m.dashboard.clientsTouched} value={s.clientsTouched} />
-          <Stat label={m.dashboard.meetings} value={s.meetings} />
-          <Stat label={m.dashboard.newLeads} value={s.newClients} />
+          <Stat label={m.dashboard.myClients} value={counts.total} />
           <Stat
-            label={m.dashboard.proposalsOut}
-            value={s.proposalsSent}
-            accent={s.proposalsSent > 0 ? "var(--accent)" : undefined}
+            label={m.dashboard.activeClients}
+            value={counts.active}
+            accent={counts.active > 0 ? "var(--success)" : undefined}
+          />
+          <Stat label={m.dashboard.leads} value={counts.leads} />
+          <Stat
+            label={m.dashboard.deadClients}
+            value={counts.dead}
+            accent={counts.dead > 0 ? "var(--critical)" : undefined}
           />
           <Stat
             label={m.dashboard.won}
-            value={s.won}
-            accent={s.won > 0 ? "var(--success)" : undefined}
+            value={counts.won}
+            accent={counts.won > 0 ? "var(--success)" : undefined}
           />
-          {HOURS_ENABLED ? (
-            <Stat
-              label={m.dashboard.hours}
-              value={formatMinutes(s.minutesWorked)}
-              sub={`${formatMinutes(s.minutesPlanned)} ${m.dashboard.ofTarget}`}
-            />
-          ) : (
-            <Stat label={m.team.activity} value={s.interactions} />
-          )}
+          <Stat
+            label={m.dashboard.openTasks}
+            value={counts.tasks}
+            accent={counts.tasks > 0 ? "var(--accent)" : undefined}
+          />
         </div>
       )}
 
@@ -228,8 +247,9 @@ export function Dashboard({ locale }: { locale: Locale }) {
                         <div className="truncate text-sm font-medium">
                           {locale === "ar" && c.nameAr ? c.nameAr : c.name}
                         </div>
-                        <div className="mt-1 flex items-center gap-2">
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
                           <StageChip stage={c.stage} />
+                          <ContactMethodChip method={c.contactMethod} locale={locale} />
                           {c.city ? (
                             <span className="truncate text-[11px] text-faint">
                               {c.city}

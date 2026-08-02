@@ -1,5 +1,6 @@
 import type {
   ClientStatus,
+  ContactMethod,
   InteractionType,
   Stage,
 } from "@/lib/config/stages";
@@ -33,6 +34,17 @@ export interface Client {
   industry: string;
   website: string;
   sizeGuess: "small" | "mid" | "large" | "";
+
+  /**
+   * What we actually did to reach them, as opposed to where they are in the
+   * pipeline. "Contacted" tells you nothing; "went, nobody there" tells you
+   * to try again with an appointment.
+   */
+  contactMethod: ContactMethod;
+
+  /** Filled in once per company so a route can be drawn without Google. */
+  lat: number | null;
+  lng: number | null;
 
   stage: Stage;
   status: ClientStatus;
@@ -374,6 +386,7 @@ export interface NewClientInput {
   website?: string;
   stage: Stage;
   status: ClientStatus;
+  contactMethod?: ContactMethod;
   ownerId: string;
   broughtById: string;
   source?: string;

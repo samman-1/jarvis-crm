@@ -233,3 +233,93 @@ export const INTERACTION_TYPES: InteractionTypeDef[] = [
 export function interactionTypeDef(id: InteractionType): InteractionTypeDef {
   return INTERACTION_TYPES.find((t) => t.id === id) ?? INTERACTION_TYPES[0];
 }
+
+/* ------------------------------------------------------------------ *
+ * How we reached them
+ *
+ * Deliberately not the same axis as stage or status. Stage is how far along
+ * they are, status is whether anyone should go near them, and this is what
+ * you actually did: a company you emailed and a company whose owner sat with
+ * you for half an hour are both "contacted", and that is useless on a board.
+ * ------------------------------------------------------------------ */
+
+export type ContactMethod =
+  | ""
+  | "cold_email"
+  | "called"
+  | "met"
+  | "visited_no_meet"
+  | "card_left"
+  | "message_sent";
+
+export interface ContactMethodDef {
+  id: ContactMethod;
+  label: string;
+  labelAr: string;
+  color: string;
+  soft: string;
+  /** Shown under the chip so the next step is obvious. */
+  hint: string;
+  hintAr: string;
+}
+
+export const CONTACT_METHODS: ContactMethodDef[] = [
+  {
+    id: "met",
+    label: "Met in person",
+    labelAr: "قابلته شخصياً",
+    color: "var(--success)",
+    soft: "var(--success-soft)",
+    hint: "Sat with someone. Follow up on what was said.",
+    hintAr: "جلست مع أحدهم. تابع ما اتُّفق عليه.",
+  },
+  {
+    id: "called",
+    label: "Called",
+    labelAr: "اتصلت",
+    color: "var(--info)",
+    soft: "var(--info-soft)",
+    hint: "Spoke on the phone. Worth going in person.",
+    hintAr: "تحدثت هاتفياً. يستحق زيارة شخصية.",
+  },
+  {
+    id: "visited_no_meet",
+    label: "Went, nobody there",
+    labelAr: "ذهبت ولم أجد أحداً",
+    color: "var(--warn)",
+    soft: "var(--warn-soft)",
+    hint: "Revisit, with an appointment this time.",
+    hintAr: "أعد الزيارة، بموعد هذه المرة.",
+  },
+  {
+    id: "card_left",
+    label: "Left a card",
+    labelAr: "تركت البطاقة",
+    color: "var(--warn)",
+    soft: "var(--warn-soft)",
+    hint: "They have your details. Chase it.",
+    hintAr: "لديهم بياناتك. تابعهم.",
+  },
+  {
+    id: "cold_email",
+    label: "Cold email",
+    labelAr: "بريد بارد",
+    color: "var(--muted)",
+    soft: "var(--surface-3)",
+    hint: "Emailed, no answer yet.",
+    hintAr: "أُرسل بريد، بلا رد بعد.",
+  },
+  {
+    id: "message_sent",
+    label: "Message sent",
+    labelAr: "رسالة مُرسلة",
+    color: "var(--muted)",
+    soft: "var(--surface-3)",
+    hint: "Waiting on a reply.",
+    hintAr: "بانتظار الرد.",
+  },
+];
+
+export function contactMethodDef(id: ContactMethod): ContactMethodDef | null {
+  return CONTACT_METHODS.find((c) => c.id === id) ?? null;
+}

@@ -17,6 +17,7 @@ import {
   Skeleton,
 } from "@/components/ui/primitives";
 import { StageChip } from "@/components/ui/badges";
+import { RouteMap } from "@/components/routes/route-map";
 import { memberLabel } from "@/lib/config/members";
 import { PageHeader } from "@/components/shell/page-header";
 import type { ClientRow, DayRoute, RouteStop } from "@/lib/types";
@@ -539,19 +540,11 @@ function RouteCard({
               </button>
 
               {showMap ? (
-                <div className="overflow-hidden rounded-md border border-border">
-                  <iframe
-                    key={embedUrl}
-                    src={embedUrl}
-                    title={m.routes.mapTitle}
-                    className="block h-64 w-full border-0 sm:h-80"
-                    // Deliberately NOT loading="lazy". The frame only exists
-                    // once you have asked for the map, and lazy meant it sat
-                    // blank whenever it opened below the fold, which on a
-                    // phone is most of the time.
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
-                </div>
+                <RouteMap
+                  stops={route.stops}
+                  clients={clients}
+                  locale={locale === "ar" ? "ar" : "en"}
+                />
               ) : null}
             </div>
           ) : null}
