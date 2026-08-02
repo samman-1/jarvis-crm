@@ -81,10 +81,13 @@ export async function POST(request: Request) {
       .filter(Boolean)
       .join(", ");
 
-    const hit = await lookup(query);
-    // Falling back to the city keeps the stop on the map rather than dropping
-    // it: roughly right beats absent when you are deciding a driving order.
-    const point = hit ?? (await lookup(`${c.city || "Jeddah"}, Saudi Arabia`));
+    /*
+     * No city fallback. Nominatim does not know most Saudi trading names, and
+     * when it fails it happily returns the centre of Jeddah — so every stop
+     * lands on the same pixel and the map claims six companies share a
+     * doorway. A stop we cannot place is left unplaced and said so.
+     */
+    const point = await lookup(query);
 
     if (point) {
       await db.updateClient(id, { lat: point[0], lng: point[1] }, session.id);
