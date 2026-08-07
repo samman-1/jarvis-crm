@@ -212,9 +212,9 @@ export function Dashboard({ locale }: { locale: Locale }) {
         </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-3">
         {/* --- Main column ------------------------------------------- */}
-        <div className="space-y-4 lg:col-span-2">
+        <div className="min-w-0 space-y-4 lg:col-span-2">
           {/* Your own clients, on the page you land on. Previously this
               lived one tap away and the home page could show an empty week
               while six companies sat waiting. */}
@@ -260,7 +260,9 @@ export function Dashboard({ locale }: { locale: Locale }) {
               />
             ) : (
               <div className="space-y-4">
-                {byStage.map((group) => (
+                {/* One group, not all of them. The home page is a glance, not
+                    the client list; the whole book is one tap away. */}
+                {byStage.slice(0, 1).map((group) => (
                   <section key={group.stage.id}>
                     <header className="mb-1.5 flex items-baseline justify-between gap-2">
                       <StageChip stage={group.stage.id} />
@@ -269,7 +271,7 @@ export function Dashboard({ locale }: { locale: Locale }) {
                       </span>
                     </header>
                     <ul className="divide-y divide-border rounded-md border border-border">
-                      {group.rows.slice(0, 6).map((c) => (
+                      {group.rows.slice(0, 5).map((c) => (
                         <li key={c.id}>
                           <Link
                             href={`/${locale}/clients/${c.id}`}
@@ -306,13 +308,22 @@ export function Dashboard({ locale }: { locale: Locale }) {
                         </li>
                       ))}
                     </ul>
-                    {group.rows.length > 6 ? (
+                    {group.rows.length > 5 ? (
                       <p className="mt-1 text-end text-[11px] text-faint">
-                        + {group.rows.length - 6}
+                        + {group.rows.length - 5}
                       </p>
                     ) : null}
                   </section>
                 ))}
+
+                {days.length > 1 ? (
+                  <Link
+                    href={`/${locale}/calendar`}
+                    className="block rounded-md border border-dashed border-border py-2.5 text-center text-xs text-muted transition-colors hover:border-accent hover:text-accent"
+                  >
+                    {m.dashboard.seeAll} ({days.length - 1} {m.dashboard.moreDays})
+                  </Link>
+                ) : null}
               </div>
             )}
 
@@ -398,7 +409,9 @@ export function Dashboard({ locale }: { locale: Locale }) {
               /* One block per day, boxed, newest first. A flat list of
                  thirty lines gives no sense of "this is what Sunday was". */
               <div className="space-y-3">
-                {days.map(([key, items]) => (
+                {/* The most recent day only. Thirty lines of history is a
+                    report, not a home page. */}
+                {days.slice(0, 1).map(([key, items]) => (
                   <section
                     key={key}
                     className="rounded-lg border border-border bg-surface-2/40 p-3"
@@ -463,7 +476,7 @@ export function Dashboard({ locale }: { locale: Locale }) {
         </div>
 
         {/* --- Right rail -------------------------------------------- */}
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           {/* The whole day on one screen: where you are going, what you owe
               yourself, who is warm. Nothing here needs another page. */}
           <RouteToday locale={locale} />
