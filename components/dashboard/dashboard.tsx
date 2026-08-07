@@ -425,8 +425,10 @@ export function Dashboard({ locale }: { locale: Locale }) {
                       </span>
                     </header>
 
+                    {/* Five lines, not the whole day. Aboodi's Tuesday alone
+                        is twenty-two entries, which is a report. */}
                     <ol className="space-y-2.5">
-                      {items.map((i) => (
+                      {items.slice(0, 5).map((i) => (
                         <li key={i.id} className="flex items-start gap-3">
                           <InteractionIcon type={i.type} />
                           <div className="min-w-0 flex-1">
