@@ -1,7 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Jarvis">
+  <!--
+    The J is drawn as a path, not as text.
+
+    A <text> favicon depends on a font the renderer may not have: Google's
+    crawler, a Windows tile and an Android home screen all rasterise this
+    without our webfont, so the letter silently falls back to something else.
+    A stroked path looks identical everywhere.
+
+    Orange on the near-black canvas, which is the accent the whole product is
+    built around, and the only colour it ever uses for the live mark.
+  -->
   <rect width="512" height="512" rx="112" fill="#0b0a08"/>
-  <circle cx="256" cy="150" r="26" fill="#f36c34"/>
-  <text x="256" y="330" font-family="Space Grotesk, Inter, system-ui, sans-serif"
-        font-size="150" font-weight="700" fill="#f6f1e9" text-anchor="middle"
-        letter-spacing="-6">J</text>
+  <circle cx="322" cy="116" r="29" fill="#f36c34"/>
+  <path d="M322 180 V306 a84 84 0 0 1 -168 0"
+        fill="none" stroke="#f36c34" stroke-width="58" stroke-linecap="round"/>
 </svg>

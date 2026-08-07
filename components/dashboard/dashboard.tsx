@@ -179,19 +179,6 @@ export function Dashboard({ locale }: { locale: Locale }) {
       <div className="grid gap-4 lg:grid-cols-3">
         {/* --- Main column ------------------------------------------- */}
         <div className="space-y-4 lg:col-span-2">
-          <QuickLog
-            clients={allClients.data ?? []}
-            locale={locale}
-            open={logOpen}
-            onOpenChange={setLogOpen}
-            onLogged={() => {
-              recent.reload();
-              stats.reload();
-              clients.reload();
-              allClients.reload();
-            }}
-          />
-
           {/* Your own clients, on the page you land on. Previously this
               lived one tap away and the home page could show an empty week
               while six companies sat waiting. */}
@@ -283,18 +270,48 @@ export function Dashboard({ locale }: { locale: Locale }) {
             ) : null}
           </Card>
 
+          {/* One card, not two. Writing what you did and reading what you
+              did are the same subject; they were split across "Log what you
+              did" and "What you did", which read as two features. */}
           <Card>
             <CardHeader
               title={m.dashboard.timeline}
               hint={m.dashboard.thisWeek}
               action={
-                <Link href={`/${locale}/clients/import?mode=activity`}>
-                  <Button size="sm" variant="secondary">
-                    {m.actions.logMany}
+                <div className="flex items-center gap-2">
+                  <Link href={`/${locale}/clients/import?mode=activity`}>
+                    <Button size="sm" variant="secondary">
+                      {m.actions.logMany}
+                    </Button>
+                  </Link>
+                  <Button
+                    size="sm"
+                    variant={logOpen ? "ghost" : "primary"}
+                    onClick={() => setLogOpen(!logOpen)}
+                  >
+                    {logOpen ? m.common.cancel : `+ ${m.dashboard.logInteraction}`}
                   </Button>
-                </Link>
+                </div>
               }
             />
+
+            {logOpen ? (
+              <div className="mb-4">
+                <QuickLog
+                  bare
+                  clients={allClients.data ?? []}
+                  locale={locale}
+                  open={logOpen}
+                  onOpenChange={setLogOpen}
+                  onLogged={() => {
+                    recent.reload();
+                    stats.reload();
+                    clients.reload();
+                    allClients.reload();
+                  }}
+                />
+              </div>
+            ) : null}
             {recent.loading ? (
               <Skeleton className="h-40" />
             ) : (recent.data ?? []).length === 0 ? (

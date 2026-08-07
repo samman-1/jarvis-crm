@@ -34,6 +34,7 @@ export function QuickLog({
   onLogged,
   open,
   onOpenChange,
+  bare = false,
 }: {
   clients: ClientRow[];
   locale: Locale;
@@ -41,6 +42,14 @@ export function QuickLog({
   /** Controlled by the page so the empty timeline can open this form too. */
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /**
+   * Render only the form, with no card around it.
+   *
+   * The home page used to carry "Log what you did" and "What you did" as two
+   * separate cards, which is one idea wearing two hats. The timeline card now
+   * hosts this form directly.
+   */
+  bare?: boolean;
 }) {
   const { m } = useI18n();
   const { user } = useSession();
@@ -84,39 +93,8 @@ export function QuickLog({
     }
   }
 
-  return (
-    <Card>
-      <CardHeader
-        title={m.actions.quickLog}
-        hint={m.actions.quickLogHint}
-        action={
-          done ? (
-            <span className="text-xs font-medium text-success">
-              ✓ {m.actions.logged}
-            </span>
-          ) : (
-            <div className="flex items-center gap-2">
-              {/* A whole day at once, for anyone catching up on a week of
-                  visits rather than logging the one they just finished. */}
-              <Link href={`/${locale}/clients/import?mode=activity`}>
-                <Button size="sm" variant="secondary">
-                  {m.actions.logMany}
-                </Button>
-              </Link>
-              <Button
-                size="sm"
-                variant={open ? "ghost" : "primary"}
-                onClick={() => setOpen(!open)}
-              >
-                {open ? m.common.cancel : `+ ${m.dashboard.logInteraction}`}
-              </Button>
-            </div>
-          )
-        }
-      />
-
-      {open ? (
-        <form onSubmit={submit} className="animate-enter space-y-3">
+  const form = (
+    <form onSubmit={submit} className="animate-enter space-y-3">
           <Select
             value={clientId}
             onChange={(e) => setClientId(e.target.value)}
@@ -188,7 +166,40 @@ export function QuickLog({
             {busy ? m.common.saving : m.actions.logIt}
           </Button>
         </form>
-      ) : null}
+  );
+
+  // Inside the timeline card: the form only, opened from that card's header.
+  if (bare) return open ? form : null;
+
+  return (
+    <Card>
+      <CardHeader
+        title={m.actions.quickLog}
+        hint={m.actions.quickLogHint}
+        action={
+          done ? (
+            <span className="text-xs font-medium text-success">
+              ✓ {m.actions.logged}
+            </span>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link href={`/${locale}/clients/import?mode=activity`}>
+                <Button size="sm" variant="secondary">
+                  {m.actions.logMany}
+                </Button>
+              </Link>
+              <Button
+                size="sm"
+                variant={open ? "ghost" : "primary"}
+                onClick={() => setOpen(!open)}
+              >
+                {open ? m.common.cancel : `+ ${m.dashboard.logInteraction}`}
+              </Button>
+            </div>
+          )
+        }
+      />
+      {open ? form : null}
     </Card>
   );
 }
