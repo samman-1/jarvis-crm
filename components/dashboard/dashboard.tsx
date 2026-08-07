@@ -42,8 +42,9 @@ import {
 import { rangeFor } from "@/lib/dates";
 import { formatDateTime, formatTime, relativeDays } from "@/lib/dates";
 import { formatMinutes, cn } from "@/lib/utils";
+import { STAGES } from "@/lib/config/stages";
 import type { Locale } from "@/lib/i18n/config";
-import type { ClientRow } from "@/lib/types";
+import type { ClientRow, Interaction } from "@/lib/types";
 
 export function Dashboard({ locale }: { locale: Locale }) {
   const { m } = useI18n();
@@ -73,12 +74,19 @@ export function Dashboard({ locale }: { locale: Locale }) {
     () => (mounted ? db().listClients() : Promise.resolve([])),
     [mounted],
   );
+  /*
+   * Recent work, not "this calendar week".
+   *
+   * The week filter meant a real history could show as an empty page: 32
+   * logged visits sat there dated the 26th and 28th of July while the strip
+   * said nothing had happened, purely because Sunday had rolled over.
+   */
   const recent = useAsync(
     () =>
       mounted
-        ? db().listInteractions({ memberId: user.id, range, limit: 12 })
+        ? db().listInteractions({ memberId: user.id, limit: 40 })
         : Promise.resolve([]),
-    [mounted, user.id, range.from],
+    [mounted, user.id],
   );
 
   // The server has no idea what time it is where you are, so the greeting is
@@ -117,6 +125,34 @@ export function Dashboard({ locale }: { locale: Locale }) {
       tasks: open.length,
     };
   }, [clients.data, tasks.data]);
+
+  /*
+   * My clients, grouped by how far along they are, furthest first.
+   *
+   * A flat list of eighty-three names sorted by staleness answers "who is
+   * cold" and nothing else. Grouped, the page answers "where does the work
+   * actually stand" at a glance.
+   */
+  const byStage = useMemo(() => {
+    const order = [...STAGES].reverse();          // won first, lead last
+    return order
+      .map((st) => ({
+        stage: st,
+        rows: mine.filter((c) => c.stage === st.id),
+      }))
+      .filter((g) => g.rows.length > 0);
+  }, [mine]);
+
+  /* What you did, broken into days, newest first. */
+  const days = useMemo(() => {
+    const groups = new Map<string, Interaction[]>();
+    for (const i of recent.data ?? []) {
+      const key = i.happenedAt.slice(0, 10);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(i);
+    }
+    return [...groups.entries()].sort((a, b) => (a[0] < b[0] ? 1 : -1));
+  }, [recent.data]);
 
   /* The subset that has actually gone quiet. Kept separate from the list
      above so it reads as a to-do, not as a second copy of the same names. */
@@ -223,43 +259,63 @@ export function Dashboard({ locale }: { locale: Locale }) {
                 }
               />
             ) : (
-              <ul className="divide-y divide-border">
-                {mine.slice(0, 8).map((c) => (
-                  <li key={c.id}>
-                    <Link
-                      href={`/${locale}/clients/${c.id}`}
-                      className="-mx-2 flex items-center gap-3 rounded-md px-2 py-2.5 transition-colors hover:bg-surface-2"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm font-medium">
-                          {locale === "ar" && c.nameAr ? c.nameAr : c.name}
-                        </div>
-                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                          <StageChip stage={c.stage} />
-                          <ContactMethodChip method={c.contactMethod} locale={locale} />
-                          {c.city ? (
-                            <span className="truncate text-[11px] text-faint">
-                              {c.city}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-                      <div className="flex shrink-0 flex-col items-end gap-1">
-                        <FreshnessChip
-                          days={c.daysSinceContact}
-                          stale={c.isStale}
-                        />
-                        {c.nextAction ? (
-                          <span className="max-w-32 truncate text-[11px] text-faint">
-                            {c.nextAction}
-                          </span>
-                        ) : null}
-                      </div>
-                    </Link>
-                  </li>
+              <div className="space-y-4">
+                {byStage.map((group) => (
+                  <section key={group.stage.id}>
+                    <header className="mb-1.5 flex items-baseline justify-between gap-2">
+                      <StageChip stage={group.stage.id} />
+                      <span className="tnum text-[11px] text-faint">
+                        {group.rows.length}
+                      </span>
+                    </header>
+                    <ul className="divide-y divide-border rounded-md border border-border">
+                      {group.rows.slice(0, 6).map((c) => (
+                        <li key={c.id}>
+                          <Link
+                            href={`/${locale}/clients/${c.id}`}
+                            className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-surface-2"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-sm font-medium">
+                                {locale === "ar" && c.nameAr ? c.nameAr : c.name}
+                              </div>
+                              <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                                <ContactMethodChip
+                                  method={c.contactMethod}
+                                  locale={locale}
+                                />
+                                {c.city ? (
+                                  <span className="truncate text-[11px] text-faint">
+                                    {c.city}
+                                  </span>
+                                ) : null}
+                              </div>
+                            </div>
+                            <div className="flex shrink-0 flex-col items-end gap-1">
+                              <FreshnessChip
+                                days={c.daysSinceContact}
+                                stale={c.isStale}
+                              />
+                              {c.nextAction ? (
+                                <span className="max-w-32 truncate text-[11px] text-faint">
+                                  {c.nextAction}
+                                </span>
+                              ) : null}
+                            </div>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                    {group.rows.length > 6 ? (
+                      <p className="mt-1 text-end text-[11px] text-faint">
+                        + {group.rows.length - 6}
+                      </p>
+                    ) : null}
+                  </section>
                 ))}
-              </ul>
+              </div>
             )}
+
             {mine.length > 8 ? (
               <Link
                 href={`/${locale}/clients`}
@@ -314,7 +370,7 @@ export function Dashboard({ locale }: { locale: Locale }) {
             ) : null}
             {recent.loading ? (
               <Skeleton className="h-40" />
-            ) : (recent.data ?? []).length === 0 ? (
+            ) : days.length === 0 ? (
               /* This used to offer "All clients", which answered a question
                  nobody standing here was asking. The two things you actually
                  want are to log one thing, or to paste the whole week. */
@@ -339,30 +395,55 @@ export function Dashboard({ locale }: { locale: Locale }) {
                 }
               />
             ) : (
-              <ol className="space-y-3">
-                {(recent.data ?? []).map((i) => (
-                  <li key={i.id} className="flex items-start gap-3">
-                    <InteractionIcon type={i.type} />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-baseline gap-x-2">
-                        <span className="text-sm font-medium">
-                          <InteractionLabel type={i.type} />
-                        </span>
-                        <span className="tnum text-xs text-faint">
-                          {formatDateTime(i.happenedAt, locale)}
-                        </span>
-                      </div>
-                      <p className="truncate text-sm text-muted">{i.summary}</p>
-                    </div>
-                    <Link
-                      href={`/${locale}/clients/${i.clientId}`}
-                      className="shrink-0 text-xs text-faint transition-colors hover:text-accent"
-                    >
-                      {m.common.open}
-                    </Link>
-                  </li>
+              /* One block per day, boxed, newest first. A flat list of
+                 thirty lines gives no sense of "this is what Sunday was". */
+              <div className="space-y-3">
+                {days.map(([key, items]) => (
+                  <section
+                    key={key}
+                    className="rounded-lg border border-border bg-surface-2/40 p-3"
+                  >
+                    <header className="mb-2.5 flex items-baseline justify-between gap-2 border-b border-border pb-2">
+                      <h3 className="text-xs font-semibold tracking-wide uppercase">
+                        {dayLabel(key, locale, m)}
+                      </h3>
+                      <span className="tnum text-[11px] text-faint">
+                        {items.length} {m.calendar.thingsLogged}
+                      </span>
+                    </header>
+
+                    <ol className="space-y-2.5">
+                      {items.map((i) => (
+                        <li key={i.id} className="flex items-start gap-3">
+                          <InteractionIcon type={i.type} />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-baseline gap-x-2">
+                              <span className="text-sm font-medium">
+                                {clientName(i.clientId, allClients.data ?? [], locale)}
+                              </span>
+                              <span className="tnum text-[11px] text-faint">
+                                {formatTime(i.happenedAt)}
+                              </span>
+                              <span className="text-[11px] text-faint">
+                                <InteractionLabel type={i.type} />
+                              </span>
+                            </div>
+                            <p className="text-sm leading-relaxed text-muted">
+                              {i.summary}
+                            </p>
+                          </div>
+                          <Link
+                            href={`/${locale}/clients/${i.clientId}`}
+                            className="shrink-0 text-xs text-faint transition-colors hover:text-accent"
+                          >
+                            {m.common.open}
+                          </Link>
+                        </li>
+                      ))}
+                    </ol>
+                  </section>
                 ))}
-              </ol>
+              </div>
             )}
           </Card>
 
@@ -524,3 +605,36 @@ function Line({
 
 
 export { formatTime };
+
+/** "Today", "Yesterday", then the weekday and date. */
+function dayLabel(
+  key: string,
+  locale: Locale,
+  m: ReturnType<typeof useI18n>["m"],
+): string {
+  const today = new Date();
+  const iso = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+      d.getDate(),
+    ).padStart(2, "0")}`;
+  if (key === iso(today)) return m.common.today;
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (key === iso(yesterday)) return locale === "ar" ? "أمس" : "Yesterday";
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-SA" : "en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "short",
+  }).format(new Date(`${key}T12:00:00`));
+}
+
+/** The company a logged line belongs to, in the reader's language. */
+function clientName(
+  id: string,
+  clients: ClientRow[],
+  locale: Locale,
+): string {
+  const c = clients.find((x) => x.id === id);
+  if (!c) return "";
+  return locale === "ar" && c.nameAr ? c.nameAr : c.name;
+}

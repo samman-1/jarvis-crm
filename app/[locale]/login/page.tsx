@@ -15,21 +15,27 @@ export default async function LoginPage({
   const m = MESSAGES[l];
 
   return (
-    <main className="jarvis-orbs relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-10">
+    <main className="jarvis-orbs relative flex min-h-screen flex-col overflow-hidden px-4">
       <div className="jarvis-grid absolute inset-0 z-0" aria-hidden />
 
-      <div className="absolute top-4 z-20 flex items-center gap-2 ltr:right-4 rtl:left-4">
+      {/*
+        A row in the layout, not a box floating over it. Absolutely positioned,
+        these controls landed on top of the wordmark on a phone, because the
+        tiles are centred in whatever height is left and on a short screen that
+        put JARVIS directly under them.
+      */}
+      <header className="relative z-20 flex shrink-0 items-center justify-end gap-2 py-4">
         <ThemeToggle />
         <LocaleSwitch locale={l} />
-      </div>
+      </header>
 
-      <div className="relative z-10 flex w-full justify-center">
+      <div className="relative z-10 flex w-full flex-1 items-center justify-center py-4">
         <Suspense fallback={null}>
           <LoginTiles locale={l} />
         </Suspense>
       </div>
 
-      <footer className="absolute bottom-5 z-10 text-[11px] text-faint">
+      <footer className="relative z-10 shrink-0 pb-5 text-center text-[11px] text-faint">
         {m.brand.agency}
       </footer>
     </main>
