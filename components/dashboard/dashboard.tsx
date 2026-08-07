@@ -332,7 +332,7 @@ export function Dashboard({ locale }: { locale: Locale }) {
           <Card>
             <CardHeader
               title={m.dashboard.timeline}
-              hint={m.dashboard.thisWeek}
+              hint={m.dashboard.recently}
               action={
                 <div className="flex items-center gap-2">
                   <Link href={`/${locale}/clients/import?mode=activity`}>
