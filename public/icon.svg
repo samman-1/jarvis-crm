@@ -35,9 +35,16 @@
     </g>
   </g>
 
+  <!--
+    Cap height is the CENTRELINE 196..316, so every letter is 34 taller than
+    that once the stroke is counted. The C's radius has to be sized from the
+    outer edge to match: 62 + 17 = 79, against the others' 154/2 = 77. The
+    extra 2 is deliberate overshoot — a round letter drawn to the same height
+    as a flat one always reads shorter.
+  -->
   <g fill="none" stroke="#f36c34" stroke-width="34" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M147.6 223.1 A43 43 0 1 0 147.6 288.9"/>
-    <path d="M223 316 V196 H258 A31 31 0 0 1 258 258 H223 M250 258 L300 316"/>
-    <path d="M349 316 V196 L392 268 L435 196 V316"/>
+    <path d="M168.9 208.5 A62 62 0 1 0 168.9 303.5"/>
+    <path d="M227 316 V196 H262 A31 31 0 0 1 262 258 H227 M254 258 L302 316"/>
+    <path d="M358 316 V196 L401 268 L444 196 V316"/>
   </g>
 </svg>
