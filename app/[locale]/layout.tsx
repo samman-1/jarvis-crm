@@ -44,6 +44,24 @@ export const metadata: Metadata = {
   description:
     "Jarvis AI Agency internal client and team tracking system. Private.",
   robots: { index: false, follow: false },
+  /**
+   * app/favicon.ico is picked up on its own, but everything else has to be
+   * declared. The apple-touch-icon matters most: without it, "Add to Home
+   * Screen" on an iPhone saves a screenshot of the page instead of the mark.
+   */
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon-any-512.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  /** Opens standalone from the home screen, and names it there. */
+  appleWebApp: {
+    capable: true,
+    title: "Jarvis CRM",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export const viewport: Viewport = {

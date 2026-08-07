@@ -1,17 +1,43 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Jarvis">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Jarvis CRM">
   <!--
-    The J is drawn as a path, not as text.
+    CRM drawn as stroked paths, not as text.
 
     A <text> favicon depends on a font the renderer may not have: Google's
     crawler, a Windows tile and an Android home screen all rasterise this
-    without our webfont, so the letter silently falls back to something else.
-    A stroked path looks identical everywhere.
+    without our webfont, so the letters silently fall back to something else.
+    Stroked paths look identical everywhere.
 
-    Orange on the near-black canvas, which is the accent the whole product is
-    built around, and the only colour it ever uses for the live mark.
+    Behind the letters: hexagon nodes and traces, the same board the app's own
+    background is drawn on. They sit behind the letters so the letters win, and
+    the .ico drops them entirely — at 16px they are mud, and three letters need
+    every pixel they can get.
   -->
   <rect width="512" height="512" rx="112" fill="#0b0a08"/>
-  <circle cx="322" cy="116" r="29" fill="#f36c34"/>
-  <path d="M322 180 V306 a84 84 0 0 1 -168 0"
-        fill="none" stroke="#f36c34" stroke-width="58" stroke-linecap="round"/>
+
+  <g opacity=".72">
+    <!-- Nodes on the board, flat-top hexagons like the background traces. -->
+    <g fill="#f36c34">
+      <polygon points="118,92 105,114.5 79,114.5 66,92 79,69.5 105,69.5"/>
+      <polygon points="446,92 433,114.5 407,114.5 394,92 407,69.5 433,69.5"/>
+      <polygon points="118,420 105,442.5 79,442.5 66,420 79,397.5 105,397.5"/>
+      <polygon points="446,420 433,442.5 407,442.5 394,420 407,397.5 433,397.5"/>
+    </g>
+
+    <g fill="none" stroke="#f36c34" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M118 92 H200 V158"/>
+      <path d="M394 92 H330 V158"/>
+      <path d="M118 420 H240 V354"/>
+      <path d="M394 420 H300 V354"/>
+      <circle cx="200" cy="158" r="10"/>
+      <circle cx="330" cy="158" r="10"/>
+      <circle cx="240" cy="354" r="10"/>
+      <circle cx="300" cy="354" r="10"/>
+    </g>
+  </g>
+
+  <g fill="none" stroke="#f36c34" stroke-width="34" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M147.6 223.1 A43 43 0 1 0 147.6 288.9"/>
+    <path d="M223 316 V196 H258 A31 31 0 0 1 258 258 H223 M250 258 L300 316"/>
+    <path d="M349 316 V196 L392 268 L435 196 V316"/>
+  </g>
 </svg>

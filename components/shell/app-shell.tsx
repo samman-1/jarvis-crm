@@ -7,6 +7,7 @@ import { useI18n } from "@/components/providers/i18n-provider";
 import { useSession } from "@/components/providers/session-provider";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { LocaleSwitch } from "@/components/shell/locale-switch";
+import { AccountMenu } from "@/components/shell/account-menu";
 import { AskJarvis } from "@/components/ai/ask-jarvis";
 import { Button } from "@/components/ui/primitives";
 import type { Locale } from "@/lib/i18n/config";
@@ -191,18 +192,22 @@ export function AppShell({
 
           <div className="flex-1" />
 
+          {/* Below sm the label comes off so the avatar has somewhere to sit.
+              A plus on an orange button is unambiguous at that size. */}
           <Link
             href={`/${locale}/clients/new`}
-            className="inline-flex h-9 items-center gap-1.5 rounded-md bg-accent px-3 text-xs font-medium text-accent-fg transition-colors hover:bg-accent-hover lg:hidden"
+            aria-label={m.nav.newClient}
+            className="inline-flex h-9 items-center gap-1.5 rounded-md bg-accent px-2.5 text-xs font-medium text-accent-fg transition-colors hover:bg-accent-hover sm:px-3 lg:hidden"
           >
             <Icon path={ICONS.plus} />
-            {m.nav.newClient}
+            <span className="hidden sm:inline">{m.nav.newClient}</span>
           </Link>
 
           <ThemeToggle />
           <div className="hidden sm:block">
             <LocaleSwitch locale={locale} />
           </div>
+          <AccountMenu locale={locale} onSignOut={signOut} />
         </header>
 
         <main className="min-w-0 flex-1 px-4 py-5 pb-24 sm:px-6 sm:py-8 lg:pb-8">
